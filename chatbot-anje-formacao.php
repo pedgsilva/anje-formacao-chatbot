@@ -413,7 +413,7 @@ class ChatBot_ANJE_Formacao {
         }
 
         // Search for course queries
-        if ($this->matches($msg, ['curso', 'cursos', 'formacao', 'formações', 'treinamento', 'workshop', 'capacitação', 'certificação', 'powerbi', 'excel'])) {
+        if ($this->matches($msg, ['curso', 'cursos', 'formacao', 'formações', 'treinamento', 'workshop', 'capacitação', 'certificação', 'powerbi', 'excel', 'gratuito', 'gratuitos', 'gratis', 'desempregado', 'desempregados'])) {
             return $this->search_courses($courses, $msg);
         }
 
