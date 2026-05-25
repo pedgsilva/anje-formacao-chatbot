@@ -313,6 +313,30 @@ class ChatBot_ANJE_Formacao {
         $equipa = $this->get_equipa();
         $orgaos = $this->get_orgaos();
 
+        // Search for person names (Teresa, Ana, Carlos, etc.)
+        $all_names = [];
+        foreach ($equipa as $group) {
+            foreach ($group as $m) {
+                $all_names[] = mb_strtolower($m['nome']);
+            }
+        }
+        foreach ($orgaos as $group) {
+            if (is_array($group) && isset($group['nome'])) {
+                $all_names[] = mb_strtolower($group['nome']);
+            } elseif (is_array($group)) {
+                foreach ($group as $m) {
+                    if (is_array($m) && isset($m['nome'])) {
+                        $all_names[] = mb_strtolower($m['nome']);
+                    }
+                }
+            }
+        }
+        foreach ($all_names as $name) {
+            if (strpos($msg, $name) !== false) {
+                return $this->find_person_info($name, $equipa, $orgaos);
+            }
+        }
+
         // Search for team/orgaos queries
         if ($this->matches($msg, ['equipa', 'equipe', 'staff', 'funcionarios', 'quem trabalha', 'diretor', 'diretores', 'diretoras', 'coordenador'])) {
             return $this->format_equipa($equipa);
@@ -327,7 +351,7 @@ class ChatBot_ANJE_Formacao {
         }
 
         // Search for course queries
-        if ($this->matches($msg, ['curso', 'cursos', 'formacao', 'formações', 'treinamento', 'workshop', 'capacitação', 'certificação'])) {
+        if ($this->matches($msg, ['curso', 'cursos', 'formacao', 'formações', 'treinamento', 'workshop', 'capacitação', 'certificação', 'powerbi', 'excel'])) {
             return $this->search_courses($courses, $msg);
         }
 
@@ -341,12 +365,36 @@ class ChatBot_ANJE_Formacao {
 
         // Default response
         return "Não tenho essa informação específica. Posso ajudar com:\n\n"
-            . "• 📚 **Cursos e formações** - Pesquisa por área (ex: IA, gestão, marketing, vendas...)\n"
+            . "• 📚 **Cursos e formações** - Pesquisa por área (ex: IA, gestão, marketing, vendas, excel, powerbi...)\n"
             . "• 💰 Preços e datas de cursos\n"
             . "• 👥 **Equipa** - Quem faz parte da ANJE Formação\n"
             . "• 📋 **Órgãos sociais** - Direção e conselhos\n"
             . "• 📞 **Contactos** - Email, telefone, morada\n\n"
             . "Ou contacte diretamente: infoformacao@anje.pt";
+    }
+
+    private function find_person_info($name, $equipa, $orgaos) {
+        // Search in equipa
+        foreach ($equipa as $group) {
+            foreach ($group as $m) {
+                if (mb_strtolower($m['nome']) === $name) {
+                    return "👤 **{$m['nome']}** - {$m['cargo']}";
+                }
+            }
+        }
+        // Search in orgaos
+        foreach ($orgaos as $group) {
+            if (is_array($group) && isset($group['nome']) && mb_strtolower($group['nome']) === $name) {
+                return "🏛️ **{$group['nome']}** - {$group['cargo']}";
+            } elseif (is_array($group)) {
+                foreach ($group as $m) {
+                    if (is_array($m) && isset($m['nome']) && mb_strtolower($m['nome']) === $name) {
+                        return "🏛️ **{$m['nome']}** - {$m['cargo']}";
+                    }
+                }
+            }
+        }
+        return "Encontrei esse nome mas não tenho detalhes. Contacte infoformacao@anje.pt";
     }
 
     private function matches($msg, $keywords) {
@@ -359,15 +407,17 @@ class ChatBot_ANJE_Formacao {
     private function search_courses($courses, $query) {
         // Detect area keywords
         $area_keywords = [
-            'ia' => ['ia', 'inteligência artificial', 'artificial intelligence', 'claude', 'chatgpt', 'machine learning', 'generativa'],
+            'excel' => ['excel', 'folha de cálculo', 'folha de calculo', 'spreadsheet'],
+            'powerbi' => ['powerbi', 'power bi', 'dashboard', 'dashboards', 'criação de dashboards'],
+            'ia' => ['ia', 'inteligência artificial', 'artificial intelligence', 'claude', 'chatgpt', 'machine learning', 'generativa', 'copilot'],
             'gestao' => ['gestao', 'gestão', 'lideran', 'liderança', 'equipa', 'tempo', 'projeto', 'produtividade', 'burnout'],
-            'marketing' => ['marketing', 'digital', 'seo', 'influenc', 'instagram', 'linkedin', 'marca'],
+            'marketing' => ['marketing', 'digital', 'seo', 'influenc', 'instagram', 'linkedin', 'marca', 'ecommerce', 'e-commerce'],
             'vendas' => ['venda', 'vendas', 'comercial', 'neuromarketing', 'crm', 'vendedor', 'prospe', 'fecho'],
-            'finanças' => ['financ', 'tesouraria', 'poupanca', 'excel', 'powerbi', 'sql', 'python'],
-            'juridico' => ['juridic', 'direito', 'rgpd', 'laboral', 'sociedade'],
+            'finanças' => ['financ', 'tesouraria', 'poupanca', 'sql', 'python', 'controlo'],
+            'juridico' => ['juridic', 'direito', 'rgpd', 'laboral', 'sociedade', 'rgpc', 'branqueamento'],
             'comunicação' => ['comunicar', 'storytelling', 'apresentac', 'impacto', 'pnl', 'falar'],
             'hotelaria' => ['hotel', 'turismo', 'higiene', 'alimentar'],
-            'empreendedorismo' => ['empreend', 'negocio', 'startup', 'plano de neg'],
+            'empreendedorismo' => ['empreend', 'negocio', 'startup', 'plano de neg', 'inovar', 'crescer', 'pme'],
             'certificação' => ['certifica', 'icagile', 'coach', 'pnl practitioner'],
             'gratuito' => ['gratuito', 'gratis', 'sem custo', 'free'],
         ];
