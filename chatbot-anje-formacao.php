@@ -205,6 +205,61 @@ class ChatBot_ANJE_Formacao {
      * ================================================================ */
 
     private function get_courses() {
+        // Try to get from WooCommerce via WP_Query (no auth needed)
+        $cached = get_transient('chatbot_af_courses_cache');
+        if ($cached !== false) {
+            return $cached;
+        }
+
+        $courses = [];
+        $query = new WP_Query([
+            'post_type' => 'product',
+            'posts_per_page' => 100,
+            'post_status' => 'publish',
+            'post_parent' => 0,
+        ]);
+
+        if ($query->have_posts()) {
+            while ($query->have_posts()) {
+                $query->the_post();
+                $product = wc_get_product(get_the_ID());
+                if (!$product) continue;
+
+                $url = get_permalink(get_the_ID());
+                if (strpos($url, '/curso/') === false) continue;
+
+                $name = $product->get_name();
+                if (empty(trim($name))) continue;
+
+                $price = $product->get_price();
+                $price_display = 'Sob consulta';
+                if ($price === '0' || $price === 0 || $price === '') {
+                    $price_display = 'Gratuito';
+                } elseif (is_numeric($price)) {
+                    $price_display = '€' . number_format((float)$price, 2, ',', '.');
+                }
+
+                $courses[] = [
+                    'titulo' => $name,
+                    'preco' => $price_display,
+                    'data' => '',
+                    'url' => $url,
+                ];
+            }
+            wp_reset_postdata();
+        }
+
+        // If WP_Query returned courses, cache them
+        if (!empty($courses)) {
+            set_transient('chatbot_af_courses_cache', $courses, HOUR_IN_SECONDS);
+            return $courses;
+        }
+
+        // Fallback to hardcoded courses
+        return $this->get_fallback_courses();
+    }
+
+    private function get_fallback_courses() {
         return [
             ['titulo' => 'Como elaborar um Plano de Negócios | Formação Assíncrona', 'preco' => '€150,00', 'data' => '25-05-2026', 'url' => 'https://anjeformacao.pt/curso/como-elaborar-um-plano-de-negocios-formacao-assincrona/'],
             ['titulo' => 'Programa Executivo Vendedor de Alta Performance | Online', 'preco' => '€280,00', 'data' => '25-05-2026', 'url' => 'https://anjeformacao.pt/curso/programa-executivo-vendedor-de-alta-performance/'],
