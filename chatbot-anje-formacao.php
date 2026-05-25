@@ -23,7 +23,6 @@ class ChatBot_ANJE_Formacao {
 
     private function __construct() {
         add_action('wp_enqueue_scripts', [$this, 'enqueue_assets']);
-        add_action('wp_footer', [$this, 'render_chatbot'], 100);
         add_action('admin_menu', [$this, 'add_admin_menu']);
         add_action('admin_init', [$this, 'register_settings']);
         add_action('wp_ajax_chatbot_anje_chat', [$this, 'handle_chat']);
@@ -52,11 +51,104 @@ class ChatBot_ANJE_Formacao {
 
     public function enqueue_assets() {
         $s = $this->get_settings();
-        if ($s['show_on_all_pages'] !== 'yes' && !is_front_page() && !is_page()) return;
 
         wp_register_style('chatbot-af-css', false);
         wp_enqueue_style('chatbot-af-css');
         wp_add_inline_style('chatbot-af-css', $this->get_css($s));
+
+        // Add chatbot HTML and JS via wp_enqueue_scripts
+        add_action('wp_enqueue_scripts', [$this, 'inject_chatbot_html'], 999);
+    }
+
+    public function inject_chatbot_html() {
+        $s = $this->get_settings();
+        $name = esc_html($s['chatbot_name']);
+        $welcome = $s['welcome_message'] ?: "Olá! 👋 Sou o assistente virtual da ANJE Formação.\n\nPosso ajudar com:\n• 📚 Cursos e formações\n• 💰 Preços e datas\n• 👥 Equipa\n• 📞 Contactos\n\nO que procura?";
+        $welcome = html_entity_decode($welcome, ENT_QUOTES, 'UTF-8');
+        $ajax = admin_url('admin-ajax.php');
+        $nonce = wp_create_nonce('chatbot_af_nonce');
+
+        $html = '
+        <div id="chatbot-af-widget">
+            <button id="chatbot-af-toggle" aria-label="' . $name . '">&#128172;</button>
+            <div id="chatbot-af-window" style="display:none;">
+                <div id="chatbot-af-header">
+                    <div id="chatbot-af-header-text">
+                        <strong>' . $name . '</strong>
+                        <small>Online</small>
+                    </div>
+                    <button id="chatbot-af-close" aria-label="Fechar">&#10005;</button>
+                </div>
+                <div id="chatbot-af-messages"></div>
+                <div id="chatbot-af-input-area">
+                    <input type="text" id="chatbot-af-input" placeholder="Escreva a sua pergunta..." maxlength="500">
+                    <button id="chatbot-af-send" aria-label="Enviar">&#10148;</button>
+                </div>
+            </div>
+        </div>';
+
+        $js = '
+        (function(){
+            var ajaxUrl=' . json_encode($ajax) . ';
+            var nonce=' . json_encode($nonce) . ';
+            var welcome=' . json_encode($welcome) . ';
+            var busy=false,shown=false;
+            var toggle=document.getElementById("chatbot-af-toggle");
+            var win=document.getElementById("chatbot-af-window");
+            var input=document.getElementById("chatbot-af-input");
+            var sendBtn=document.getElementById("chatbot-af-send");
+            var msgs=document.getElementById("chatbot-af-messages");
+            if(!toggle)return;
+
+            toggle.addEventListener("click",function(){
+                if(win.style.display==="flex"){win.style.display="none";}
+                else{win.style.display="flex";input.focus();if(!shown&&welcome){addMsg(welcome,"bot");shown=true;}}
+            });
+            document.getElementById("chatbot-af-close").addEventListener("click",function(){win.style.display="none";});
+            sendBtn.addEventListener("click",sendMsg);
+            input.addEventListener("keypress",function(e){if(e.key==="Enter")sendMsg();});
+            document.addEventListener("keydown",function(e){if(e.key==="Escape"&&win.style.display==="flex")win.style.display="none";});
+
+            function sendMsg(){
+                var msg=input.value.trim();
+                if(!msg||busy)return;busy=true;sendBtn.disabled=true;
+                addMsg(msg,"user");input.value="";addTyping();
+                var xhr=new XMLHttpRequest();
+                xhr.open("POST",ajaxUrl);
+                xhr.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
+                xhr.timeout=15000;
+                xhr.onload=function(){
+                    removeTyping();
+                    try{var r=JSON.parse(xhr.responseText);
+                        if(r.success){addMsg(r.data.response||"Erro.","bot");}
+                        else{addMsg("Erro: "+(r.data||"Desconhecido"),"bot");}
+                    }catch(e){addMsg("Erro ao processar.","bot");}
+                };
+                xhr.onerror=function(){removeTyping();addMsg("Erro de ligação.","bot");};
+                xhr.ontimeout=function(){removeTyping();addMsg("Timeout. Tente novamente.","bot");};
+                xhr.onreadystatechange=function(){if(xhr.readyState===4){busy=false;sendBtn.disabled=false;input.focus();}};
+                xhr.send("action=chatbot_anje_chat&message="+encodeURIComponent(msg)+"&nonce="+nonce);
+            }
+            function addMsg(text,type){
+                var d=document.createElement("div");
+                d.className="caf-msg caf-"+type;
+                var html=text
+                    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+                    .replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>")
+                    .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,\'<a href="$2" target="_blank" rel="noopener">$1</a>\')
+                    .replace(/(https?:\/\/[^<\s\)]+)/g,\'<a href="$1" target="_blank" rel="noopener">$1</a>\')
+                    .replace(/\n/g,"<br>");
+                d.innerHTML=html;msgs.appendChild(d);d.scrollIntoView({behavior:"smooth"});
+            }
+            function addTyping(){
+                var d=document.createElement("div");d.id="chatbot-af-typing";
+                d.className="caf-msg caf-bot";d.textContent="A escrever...";msgs.appendChild(d);
+            }
+            function removeTyping(){var t=document.getElementById("chatbot-af-typing");if(t)t.remove();}
+        })();';
+
+        echo $html;
+        wp_add_inline_script('chatbot-af-css', $js);
     }
 
     private function get_css($s) {
@@ -91,97 +183,6 @@ class ChatBot_ANJE_Formacao {
         #chatbot-af-send:disabled{background:#ccc;cursor:not-allowed}
         @media(max-width:480px){chatbot-af-window{width:calc(100vw - 16px);height:calc(100vh - 120px)}}
         ";
-    }
-
-    /* ================================================================
-     * RENDER CHATBOT
-     * ================================================================ */
-
-    public function render_chatbot() {
-        $s = $this->get_settings();
-        $name = esc_html($s['chatbot_name']);
-        $welcome = $s['welcome_message'] ?: "Olá! 👋 Sou o assistente virtual da ANJE Formação.\n\nPosso ajudar com:\n• 📚 Cursos e formações\n• 💰 Preços e datas\n• 👥 Equipa\n• 📞 Contactos\n\nO que procura?";
-        $welcome = html_entity_decode($welcome, ENT_QUOTES, 'UTF-8');
-        $ajax = admin_url('admin-ajax.php');
-        $nonce = wp_create_nonce('chatbot_af_nonce');
-        ?>
-        <div id="chatbot-af-widget">
-            <button id="chatbot-af-toggle" aria-label="<?php echo $name; ?>">&#128172;</button>
-            <div id="chatbot-af-window">
-                <div id="chatbot-af-header">
-                    <div id="chatbot-af-header-text">
-                        <strong><?php echo $name; ?></strong>
-                        <small>Online</small>
-                    </div>
-                    <button id="chatbot-af-close" aria-label="Fechar">&#10005;</button>
-                </div>
-                <div id="chatbot-af-messages"></div>
-                <div id="chatbot-af-input-area">
-                    <input type="text" id="chatbot-af-input" placeholder="Escreva a sua pergunta..." maxlength="500">
-                    <button id="chatbot-af-send" aria-label="Enviar">&#10148;</button>
-                </div>
-            </div>
-        </div>
-        <script>
-        (function(){
-            var ajaxUrl=<?php echo json_encode($ajax);?>;
-            var nonce=<?php echo json_encode($nonce);?>;
-            var welcome=<?php echo json_encode($welcome);?>;
-            var busy=false,shown=false;
-            var toggle=document.getElementById('chatbot-af-toggle');
-            var win=document.getElementById('chatbot-af-window');
-            var input=document.getElementById('chatbot-af-input');
-            var sendBtn=document.getElementById('chatbot-af-send');
-            var msgs=document.getElementById('chatbot-af-messages');
-
-            toggle.addEventListener('click',function(){
-                if(win.style.display==='flex'){win.style.display='none';}
-                else{win.style.display='flex';input.focus();if(!shown&&welcome){addMsg(welcome,'bot');shown=true;}}
-            });
-            document.getElementById('chatbot-af-close').addEventListener('click',function(){win.style.display='none';});
-            sendBtn.addEventListener('click',sendMsg);
-            input.addEventListener('keypress',function(e){if(e.key==='Enter')sendMsg();});
-            document.addEventListener('keydown',function(e){if(e.key==='Escape'&&win.style.display==='flex')win.style.display='none';});
-
-            function sendMsg(){
-                var msg=input.value.trim();
-                if(!msg||busy)return;busy=true;sendBtn.disabled=true;
-                addMsg(msg,'user');input.value='';addTyping();
-                var xhr=new XMLHttpRequest();
-                xhr.open('POST',ajaxUrl);
-                xhr.setRequestHeader('Content-Type','application/x-www-form-urlencoded');
-                xhr.timeout=15000;
-                xhr.onload=function(){
-                    removeTyping();
-                    try{var r=JSON.parse(xhr.responseText);
-                        if(r.success){addMsg(r.data.response||'Erro.','bot');}
-                        else{addMsg('Erro: '+(r.data||'Desconhecido'),'bot');}
-                    }catch(e){addMsg('Erro ao processar.','bot');}
-                };
-                xhr.onerror=function(){removeTyping();addMsg('Erro de ligação.','bot');};
-                xhr.ontimeout=function(){removeTyping();addMsg('Timeout. Tente novamente.','bot');};
-                xhr.onreadystatechange=function(){if(xhr.readyState===4){busy=false;sendBtn.disabled=false;input.focus();}};
-                xhr.send('action=chatbot_anje_chat&message='+encodeURIComponent(msg)+'&nonce='+nonce);
-            }
-            function addMsg(text,type){
-                var d=document.createElement('div');
-                d.className='caf-msg caf-'+type;
-                var html=text
-                    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-                    .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
-                    .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>')
-                    .replace(/(https?:\/\/[^<\s\)]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>')
-                    .replace(/\n/g,'<br>');
-                d.innerHTML=html;msgs.appendChild(d);d.scrollIntoView({behavior:'smooth'});
-            }
-            function addTyping(){
-                var d=document.createElement('div');d.id='chatbot-af-typing';
-                d.className='caf-msg caf-bot';d.textContent='A escrever...';msgs.appendChild(d);
-            }
-            function removeTyping(){var t=document.getElementById('chatbot-af-typing');if(t)t.remove();}
-        })();
-        </script>
-        <?php
     }
 
     /* ================================================================
