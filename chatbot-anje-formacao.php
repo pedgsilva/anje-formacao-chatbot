@@ -246,6 +246,13 @@ class ChatBot_ANJE_Formacao {
             ['titulo' => 'Liderança e Ferramentas para a Transformação Digital | Algarve', 'preco' => 'Gratuito', 'data' => '', 'url' => 'https://anjeformacao.pt/curso/lideranca-e-ferramentas-para-a-transformacao-digital-algarve/'],
             ['titulo' => 'Branqueamento de Capitais em Portugal | Online', 'preco' => '€150,00', 'data' => '', 'url' => 'https://anjeformacao.pt/curso/branqueamento-de-capitais-em-portugal-online/'],
             ['titulo' => 'PWIT & ANJE Leadership Development Program', 'preco' => '€1050,00', 'data' => '', 'url' => 'https://anjeformacao.pt/curso/pwit-anje-leadership-development-program-norte/'],
+            ['titulo' => 'Excel Avançado aplicado à Gestão | Algarve', 'preco' => 'Gratuito', 'data' => '', 'url' => 'https://anjeformacao.pt/curso/excel-avancado-aplicado-a-gestao-ufcd-342219-algarve/'],
+            ['titulo' => 'Criação de dashboards dinâmicos com PowerBI | Algarve', 'preco' => 'Gratuito', 'data' => '', 'url' => 'https://anjeformacao.pt/curso/criacao-de-dashboards-dinamicos-com-powerbi-ufcfd-341107-algarve/'],
+            ['titulo' => 'Excel Iniciação | Algarve', 'preco' => 'Gratuito', 'data' => '', 'url' => 'https://anjeformacao.pt/curso/excel-iniciacao-extra-catalogo-algarve/'],
+            ['titulo' => 'Folha de cálculo – utilização intermédia | Centro', 'preco' => 'Gratuito', 'data' => '', 'url' => 'https://anjeformacao.pt/curso/folha-de-calculo-utilizacao-intermedia-centro/'],
+            ['titulo' => 'Produzir documentos em folha de cálculo – UC 02775 | Algarve', 'preco' => 'Gratuito', 'data' => '', 'url' => 'https://anjeformacao.pt/curso/produzir-documentos-em-folha-de-calculo-uc-02775-algarve/'],
+            ['titulo' => 'Gestão de correio eletrónico e pesquisa de informação na web – UFCD 0693 | Algarve', 'preco' => 'Gratuito', 'data' => '', 'url' => 'https://anjeformacao.pt/curso/gestao-de-correio-eletronico-e-pesquisa-de-informacao-na-web/'],
+            ['titulo' => 'Produzir documentos em folha de cálculo – UC 02775 | Norte (extra)', 'preco' => 'Gratuito', 'data' => '', 'url' => 'https://anjeformacao.pt/curso/produzir-documentos-em-folha-de-calculo-uc-02775-norte/'],
         ];
     }
 
