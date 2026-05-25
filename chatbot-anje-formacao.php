@@ -481,7 +481,7 @@ class ChatBot_ANJE_Formacao {
             'hotelaria' => ['hotel', 'turismo', 'higiene', 'alimentar'],
             'empreendedorismo' => ['empreend', 'negocio', 'startup', 'plano de neg', 'inovar', 'crescer', 'pme'],
             'certificação' => ['certifica', 'icagile', 'coach', 'pnl practitioner'],
-            'gratuito' => ['gratuito', 'gratis', 'sem custo', 'free'],
+            'gratuito' => ['gratuito', 'gratis', 'sem custo', 'free', 'desempregado', 'desempregados'],
         ];
 
         $matched_area = null;
@@ -498,10 +498,11 @@ class ChatBot_ANJE_Formacao {
         $filtered = [];
         foreach ($courses as $c) {
             $titulo_lower = mb_strtolower($c['titulo']);
+            $preco_lower = mb_strtolower($c['preco']);
             if ($matched_area) {
                 $keywords = $area_keywords[$matched_area];
                 foreach ($keywords as $kw) {
-                    if (strpos($titulo_lower, $kw) !== false) {
+                    if (strpos($titulo_lower, $kw) !== false || strpos($preco_lower, $kw) !== false) {
                         $filtered[] = $c;
                         break;
                     }
