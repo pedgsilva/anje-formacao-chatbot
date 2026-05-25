@@ -148,7 +148,7 @@ class ChatBot_ANJE_Formacao {
         })();';
 
         echo $html;
-        wp_add_inline_script('chatbot-af-css', $js);
+        wp_add_inline_script('jquery', $js);
     }
 
     private function get_css($s) {
