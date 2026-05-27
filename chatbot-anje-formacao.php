@@ -401,15 +401,22 @@ class ChatBot_ANJE_Formacao {
 
         // Search for formação-ação specific queries
         if ($this->matches($msg, ['formação ação', 'formacao acao', 'formação-ação', 'formacao-acao'])) {
-            return "📋 **Formação-Ação ANJE:**\n\n"
-                . "A Formação-Ação é um programa de formação prática e aplicada, desenhado para empresas e profissionais.\n\n"
+            return "📋 **Formação-Ação para PME:**\n\n"
+                . "Programa de formação à medida para micro, pequenas e médias empresas.\n\n"
+                . "Como funciona:\n"
+                . "• Diagnóstico de necessidades da empresa\n"
+                . "• Plano de ação integrado (formação + consultoria especializada)\n"
+                . "• Focado em reorganização, inovação e melhoria de gestão\n\n"
+                . "💰 **Investimento:** 90% financiado pelo FSE, 10% pela empresa\n\n"
+                . "📍 **Regiões:** Norte, Centro e Alentejo\n"
+                . "🏢 **Destinatários:** Micro, PME até 250 colaboradores\n\n"
+                . "📌 **Áreas temáticas:** Inovação, Transição Digital, ESG\n\n"
                 . "👩‍💼 **Responsáveis:**\n"
-                . "• Vitória Pereira - Coordenadora Formação-Ação\n"
-                . "• Cristiana Moreira - Coordenadora Formação-Ação\n\n"
-                . "📧 Para mais informações: infoformacao@anje.pt\n"
-                . "📱 Telefone: (+351) 220 108 074\n"
-                . "📍 Rua Paulo da Gama - Casa do Farol, 4169-006 Porto\n\n"
-                . "Consulte todos os cursos disponíveis em https://anjeformacao.pt";
+                . "• Vitória Pereira - vitoriapereira@anje.pt | (+351) 965 390 959\n"
+                . "• Cristiana Moreira - cristianamoreira@anje.pt | (+351) 965 390 959\n\n"
+                . "ℹ️ Mais info: https://anjeformacao.pt/formacao-acao-pme/\n"
+                . "📧 Contacto geral: infoformacao@anje.pt\n"
+                . "📍 Rua Paulo da Gama - Casa do Farol, 4169-006 Porto";
         }
 
         // Search for team/orgaos queries
