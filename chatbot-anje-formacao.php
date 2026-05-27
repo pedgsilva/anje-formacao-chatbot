@@ -399,6 +399,19 @@ class ChatBot_ANJE_Formacao {
             }
         }
 
+        // Search for formação-ação specific queries
+        if ($this->matches($msg, ['formação ação', 'formacao acao', 'formação-ação', 'formacao-acao'])) {
+            return "📋 **Formação-Ação ANJE:**\n\n"
+                . "A Formação-Ação é um programa de formação prática e aplicada, desenhado para empresas e profissionais.\n\n"
+                . "👩‍💼 **Responsáveis:**\n"
+                . "• Vitória Pereira - Coordenadora Formação-Ação\n"
+                . "• Cristiana Moreira - Coordenadora Formação-Ação\n\n"
+                . "📧 Para mais informações: infoformacao@anje.pt\n"
+                . "📱 Telefone: (+351) 220 108 074\n"
+                . "📍 Rua Paulo da Gama - Casa do Farol, 4169-006 Porto\n\n"
+                . "Consulte todos os cursos disponíveis em https://anjeformacao.pt";
+        }
+
         // Search for team/orgaos queries
         if ($this->matches($msg, ['equipa', 'equipe', 'staff', 'funcionarios', 'quem trabalha', 'diretor', 'diretores', 'diretoras', 'coordenador'])) {
             return $this->format_equipa($equipa);
@@ -413,16 +426,16 @@ class ChatBot_ANJE_Formacao {
         }
 
         // Search for course queries
-        if ($this->matches($msg, ['curso', 'cursos', 'formacao', 'formações', 'treinamento', 'workshop', 'capacitação', 'certificação', 'powerbi', 'excel', 'gratuito', 'gratuitos', 'gratis', 'desempregado', 'desempregados'])) {
+        if ($this->matches($msg, ['curso', 'cursos', 'formacao', 'formações', 'treinamento', 'workshop', 'capacitação', 'certificação', 'powerbi', 'excel', 'gratuito', 'gratuitos', 'gratis', 'desempregado', 'desempregados', 'formação ação', 'formacao acao', 'formação-ação', 'formacao-acao'])) {
             return $this->search_courses($courses, $msg);
         }
 
         // Search for contact queries
         if ($this->matches($msg, ['contacto', 'contatos', 'email', 'telefone', 'morada', 'endereço', 'onde fica', 'localização'])) {
-            return "📞 **Contactos da ANJE Formação:**\n\n"
-                . "📧 Email: infoformacao@anje.pt\n"
-                . "📱 Telefone: (+351) 220 108 074\n"
-                . "📍 Rua do Conde de Redondo, 91-B, Lisboa";
+            return "📞 **Contactos da ANJE Formação:**\\n\\n"
+                . "📧 Email: infoformacao@anje.pt\\n"
+                . "📱 Telefone: (+351) 220 108 074\\n"
+                . "📍 Rua Paulo da Gama - Casa do Farol, 4169-006 Porto";
         }
 
         // Default response
