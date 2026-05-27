@@ -70,7 +70,7 @@ class ChatBot_ANJE_Formacao {
 
         $html = '
         <div id="chatbot-af-widget">
-            <button id="chatbot-af-toggle" aria-label="' . $name . '">&#128172;</button>
+            <button id="chatbot-af-toggle" aria-label="' . $name . '"><img src="' . plugin_dir_url(__FILE__) . 'assets/chatbot-avatar.svg" alt="' . $name . '" width="60" height="60" style="border-radius:50%;display:block;"></button>
             <div id="chatbot-af-window" style="display:none;">
                 <div id="chatbot-af-header">
                     <div id="chatbot-af-header-text">
@@ -158,7 +158,7 @@ class ChatBot_ANJE_Formacao {
         $winSide = ($pos === 'left') ? 'left:0' : 'right:0';
         return "
         #chatbot-af-widget{position:fixed;bottom:20px;{$side}z-index:999999;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
-        #chatbot-af-toggle{width:60px;height:60px;border-radius:50%;border:none;background:{$c};color:#fff;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.2);font-size:28px;display:flex;align-items:center;justify-content:center;transition:transform .2s}
+        #chatbot-af-toggle{width:60px;height:60px;border-radius:50%;border:none;background:none;color:#fff;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.2);font-size:28px;display:flex;align-items:center;justify-content:center;transition:transform .2s;padding:0;overflow:hidden}
         #chatbot-af-toggle:hover{transform:scale(1.08)}
         #chatbot-af-window{position:absolute;bottom:75px;{$winSide};width:400px;height:580px;background:#fff;border-radius:16px;box-shadow:0 12px 48px rgba(0,0,0,.18);display:none;flex-direction:column;overflow:hidden;animation:cafSlide .25s ease}
         @keyframes cafSlide{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
