@@ -158,9 +158,9 @@ class ChatBot_ANJE_Formacao {
         $winSide = ($pos === 'left') ? 'left:0' : 'right:0';
         return "
         #chatbot-af-widget{position:fixed;bottom:20px;{$side}z-index:999999;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
-        #chatbot-af-toggle{width:60px;height:60px;border-radius:50%;border:none;background:none;color:#fff;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.2);font-size:28px;display:flex;align-items:center;justify-content:center;transition:transform .2s;padding:0;overflow:hidden}
+        #chatbot-af-toggle{width:90px;height:90px;border-radius:50%;border:none;background:none;color:#fff;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.2);font-size:28px;display:flex;align-items:center;justify-content:center;transition:transform .2s;padding:0;overflow:hidden}
         #chatbot-af-toggle:hover{transform:scale(1.08)}
-        #chatbot-af-window{position:absolute;bottom:75px;{$winSide};width:400px;height:580px;background:#fff;border-radius:16px;box-shadow:0 12px 48px rgba(0,0,0,.18);display:none;flex-direction:column;overflow:hidden;animation:cafSlide .25s ease}
+        #chatbot-af-window{position:absolute;bottom:105px;{$winSide};width:400px;height:580px;background:#fff;border-radius:16px;box-shadow:0 12px 48px rgba(0,0,0,.18);display:none;flex-direction:column;overflow:hidden;animation:cafSlide .25s ease}
         @keyframes cafSlide{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
         #chatbot-af-header{background:{$c};color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px}
         #chatbot-af-header-text{flex:1}
