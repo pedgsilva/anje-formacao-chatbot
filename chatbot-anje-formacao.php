@@ -70,7 +70,7 @@ class ChatBot_ANJE_Formacao {
 
         $html = '
         <div id="chatbot-af-widget">
-<button id="chatbot-af-toggle" aria-label="' . $name . '" style="width:90px;height:90px;border-radius:50%;border:none;padding:0;overflow:hidden;background:none;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.2);"><img src="' . plugin_dir_url(__FILE__) . 'assets/BOT.png" alt="' . $name . '" style="width:90px;height:90px;object-fit:contain;display:block;"></button>
+<button id="chatbot-af-toggle" aria-label="' . $name . '" style="width:90px;height:90px;border-radius:50%;border:none;padding:0;overflow:hidden;background:none;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.2);"><img src="' . plugin_dir_url(__FILE__) . 'assets/BOT.jpg" alt="' . $name . '" style="width:90px;height:90px;object-fit:contain;display:block;"></button>
             <div id="chatbot-af-window" style="display:none;">
                 <div id="chatbot-af-header">
                     <div id="chatbot-af-header-text">
