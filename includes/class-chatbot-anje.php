@@ -79,6 +79,9 @@ class ChatBot_ANJE_Formacao {
             #chatbot-anje-toggle img{width:90px;height:90px;object-fit:contain;display:block}
             #chatbot-anje-window{position:absolute;bottom:105px;<?php echo ($pos === 'left' ? 'left:0' : 'right:0'); ?>;width:400px;height:580px;background:#fff;border-radius:16px;box-shadow:0 12px 48px rgba(0,0,0,.18);display:none;flex-direction:column;overflow:hidden;animation:chatbotSlideUp .25s ease}
             @keyframes chatbotSlideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+            @media(max-width:480px){
+                #chatbot-anje-window{width:calc(100vw - 16px);height:calc(100vh - 120px);right:0;left:0;margin:0 auto;bottom:105px}
+            }
             #chatbot-anje-header{background:{$color};color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px}
             #chatbot-anje-header-text{flex:1}
             #chatbot-anje-header strong{display:block;font-size:14px;font-weight:600}
@@ -120,7 +123,7 @@ class ChatBot_ANJE_Formacao {
         $welcome = html_entity_decode($welcome, ENT_QUOTES, 'UTF-8');
         ?>
         <div id="chatbot-anje-widget">
-            <button id="chatbot-anje-toggle" aria-label="<?php echo $name; ?>" style="width:90px;height:90px;border-radius:50%;border:none;padding:0;overflow:hidden;background:none;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.2);"><img src="<?php echo plugin_dir_url(__FILE__); ?>../assets/BOT.jpg" alt="<?php echo $name; ?>" style="width:90px;height:90px;object-fit:contain;display:block;"></button>
+            <button id="chatbot-anje-toggle" aria-label="<?php echo $name; ?>" style="width:90px;height:90px;border-radius:50%;border:none;padding:0;overflow:hidden;background:none;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.2);"><img src="<?php echo plugin_dir_url(__FILE__); ?>../assets/Wise.png" alt="<?php echo $name; ?>" style="width:90px;height:90px;object-fit:contain;display:block;"></button>
             <div id="chatbot-anje-window">
                 <div id="chatbot-anje-header">
                     <div id="chatbot-anje-header-text">
