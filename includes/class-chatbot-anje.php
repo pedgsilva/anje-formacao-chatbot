@@ -87,7 +87,7 @@ class ChatBot_ANJE_Formacao {
             #chatbot-anje-input-area{display:flex;padding:10px 12px;background:#fff;border-top:1px solid #e8e8e8;gap:8px;flex-shrink:0}
             #chatbot-anje-input{flex:1;padding:10px 14px;border:1px solid #ddd;border-radius:20px;outline:none;font-size:13.5px;font-family:inherit}
             #chatbot-anje-input:focus{border-color:{$color}}
-            #chatbot-anje-send{width:42px;height:42px;border-radius:50%;border:none;background:{$color};color:#fff;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center}
+            #chatbot-anje-send{width:42px;height:42px;min-width:42px;min-height:42px;max-width:42px;max-height:42px;border-radius:50%;border:none;outline:none;background:{$color};color:#fff;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-sizing:border-box;padding:0;margin:0}
             #chatbot-anje-send:disabled{background:#ccc;cursor:not-allowed}
         ";
     }
