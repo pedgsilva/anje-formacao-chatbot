@@ -4,13 +4,22 @@ Plugin WordPress para o chatbot da ANJE Formação (anjeformacao.pt).
 
 ## Características
 
-- **Sem LLM** - Respostas diretas baseadas em regras, sem custos de API
-- **Cursos hardcoded** - Lista de cursos do WooCommerce embutida no plugin
-- **Pesquisa por área** - IA, Gestão, Marketing, Vendas, Finanças, Jurídico, etc.
-- **Equipa e Órgãos Sociais** - Informação direta
+- **Com LLM** - Suporte a backend Flask (proxy) ou OpenRouter API direta
+- **Fallback rule-based** - Funciona sem LLM configurada (respostas por regras)
+- **Cursos dinâmicos** - WooCommerce WP_Query com cache 1h + fallback hardcoded
+- **Pesquisa por área** - Excel, PowerBI, IA, Gestão, Marketing, Vendas, Finanças, Jurídico, etc.
+- **Equipa e Órgãos Sociais** - Informação completa
 - **Contactos** - Email, telefone, morada
-- **Design responsivo** - Widget de chat flutuante
-- **Customizável** - Nome, cor, posição, mensagem de boas-vindas
+- **Formação-Ação** - Informação detalhada do programa
+- **Design responsivo** - Widget de chat flutuante com imagem personalizada
+- **Customizável** - Nome, cor, posição, mensagem de boas-vindas, timeout, max tokens
+- **Admin completo** - Configuração de backend URL, API key, modelo LLM
+
+## Requisitos
+
+- WordPress 5.0+
+- PHP 7.4+
+- WooCommerce (para cursos dinâmicos)
 
 ## Instalação
 
@@ -19,15 +28,34 @@ Plugin WordPress para o chatbot da ANJE Formação (anjeformacao.pt).
 3. Ativar
 4. Definições > ChatBot ANJE > Configurar
 
-## Actualização de Cursos
+## Configuração LLM
 
-Para actualizar a lista de cursos, editar o array `$courses` no método `get_cursos()`.
+### Opção A: Backend Flask (Recomendado)
+1. Inserir URL do backend Flask (ex: https://chat.anjeformacao.pt)
+2. O chatbot proxya os pedidos para o backend
+
+### Opção B: OpenRouter Direto
+1. Inserir OpenRouter API Key
+2. Configurar modelo (ex: openrouter/owl-alpha)
+3. O chatbot chama a API diretamente
+
+### Sem configuração
+- O chatbot funciona com respostas rule-based (sem LLM)
 
 ## Changelog
 
+### v3.0.0
+- Adicionado suporte a LLM via backend Flask (proxy)
+- Adicionado suporte a OpenRouter API direta
+- Fallback rule-based quando LLM não configurada
+- System prompt completo com cursos dinâmicos, equipa, orgãos, formação-ação
+- Botão do chatbot com imagem Wise.png (90x90)
+- CSS responsivo com max-height dinâmico (não sai do ecrã)
+- Admin page com configurações de backend, API key, modelo, tokens, timeout
+
 ### v2.0.0
-- Removido LLM (OpenRouter)
 - Respostas diretas baseadas em regras
 - Lista de cursos hardcoded (48+ cursos)
 - Pesquisa por área com keywords
 - Info de equipa e órgãos sociais
+- BOT.jpg como imagem do botão
