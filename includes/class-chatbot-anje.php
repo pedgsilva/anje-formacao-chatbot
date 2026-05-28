@@ -277,7 +277,9 @@ class ChatBot_ANJE_Formacao {
         $openrouter_key = $settings['openrouter_key'];
 
         if (empty($backend_url) && empty($openrouter_key)) {
-            wp_send_json_success(['response' => '⚠️ O chatbot não está configurado. Peça ao administrador para configurar a URL do backend ou a API Key em Definições > ChatBot ANJE.']);
+            $response = $this->get_rule_based_response(strtolower(trim($msg)));
+            wp_send_json_success(['response' => $response]);
+            return;
         }
 
         // If backend URL is set, proxy the request
@@ -507,6 +509,162 @@ class ChatBot_ANJE_Formacao {
             ['titulo' => 'Liderança Anti-Burnout', 'preco' => '€120,00', 'data' => '', 'url' => 'https://anjeformacao.pt/curso/lideranca-anti-burnout/'],
             ['titulo' => 'IA Generativa', 'preco' => '€350,00', 'data' => '', 'url' => 'https://anjeformacao.pt/curso/ia-generativa/'],
         ];
+    }
+
+    /**
+     * Rule-based response fallback when no LLM is configured
+     */
+    private function get_rule_based_response($msg) {
+        $equipa = [
+            'diretoras' => [['nome' => 'Ana Jogo Mendes', 'cargo' => 'Diretora ANJE Formação']],
+            'coordenadores' => [
+                ['nome' => 'Cláudia Almeida', 'cargo' => 'Coordenadora'],
+                ['nome' => 'Cristiana Moreira', 'cargo' => 'Coordenadora'],
+                ['nome' => 'Manuela Almeida', 'cargo' => 'Coordenadora'],
+                ['nome' => 'Vitória Pereira', 'cargo' => 'Coordenadora'],
+                ['nome' => 'Ana Rodrigues', 'cargo' => 'Coordenadora Lisboa'],
+                ['nome' => 'Armanda Ângelo', 'cargo' => 'Coordenadora Coimbra'],
+                ['nome' => 'Cátia Santos', 'cargo' => 'Coordenadora Algarve'],
+                ['nome' => 'Patrícia Nobre', 'cargo' => 'Coordenadora Alentejo'],
+            ],
+            'administrativos' => [
+                ['nome' => 'Sara Almeida', 'cargo' => 'Administrativa'],
+                ['nome' => 'Susana Pereira', 'cargo' => 'Administrativa'],
+                ['nome' => 'Fátima Pinto', 'cargo' => 'Administrativa Coimbra'],
+            ],
+            'comunicacao' => [['nome' => 'Teresa Miranda', 'cargo' => 'Comunicação e Marketing']],
+        ];
+        $orgaos = [
+            'presidente' => ['nome' => 'Carlos Carvalho', 'cargo' => 'Presidente'],
+            'vice_presidentes' => [
+                ['nome' => 'Nuno Malheiro', 'cargo' => 'Vice-Presidente'],
+                ['nome' => 'Filipa Pinto de Carvalho', 'cargo' => 'Vice-Presidente'],
+                ['nome' => 'Gonçalo Simões de Almeida', 'cargo' => 'Vice-Presidente'],
+            ],
+            'assembleia' => [['nome' => 'Miguel Moreira da Silva', 'cargo' => 'Presidente da Assembleia Geral']],
+            'conselho_fiscal' => [
+                ['nome' => 'Catarina Azevedo', 'cargo' => 'Presidente do Conselho Fiscal'],
+                ['nome' => 'Pedro Cardoso', 'cargo' => 'Vice-Presidente'],
+                ['nome' => 'Sofia Xavier', 'cargo' => 'Vogal'],
+            ],
+        ];
+
+        // Check person names
+        foreach ($equipa as $group) {
+            foreach ($group as $m) {
+                if (mb_strpos($msg, mb_strtolower($m['nome'])) !== false) {
+                    return "👤 **{$m['nome']}** - {$m['cargo']}";
+                }
+            }
+        }
+        foreach ($orgaos as $group) {
+            if (isset($group['nome'])) {
+                if (mb_strpos($msg, mb_strtolower($group['nome'])) !== false) {
+                    return "🏛️ **{$group['nome']}** - {$group['cargo']}";
+                }
+            } else {
+                foreach ($group as $m) {
+                    if (mb_strpos($msg, mb_strtolower($m['nome'])) !== false) {
+                        return "🏛️ **{$m['nome']}** - {$m['cargo']}";
+                    }
+                }
+            }
+        }
+
+        if ($this->matches_any($msg, ['formação ação', 'formacao acao', 'formação-ação', 'formacao-acao'])) {
+            return "📋 **Formação-Ação para PME:**\n\nPrograma de formação à medida para micro, pequenas e médias empresas.\n\n💰 Financiamento: 90% FSE, 10% empresa\n📍 Regiões: Norte, Centro, Alentejo\n🏢 Destinatários: Micro/PME até 250 colaboradores\n📌 Áreas: Inovação, Transição Digital, ESG\n\n👩‍💼 Responsáveis:\n• Vitória Pereira - vitoriapereira@anje.pt\n• Cristiana Moreira - cristianamoreira@anje.pt\n\nℹ️ https://anjeformacao.pt/formacao-acao-pme/\n📧 infoformacao@anje.pt\n📍 Rua Paulo da Gama - Casa do Farol, 4169-006 Porto";
+        }
+
+        if ($this->matches_any($msg, ['equipa', 'equipe', 'staff', 'funcionarios', 'quem trabalha', 'diretor', 'diretoras'])) {
+            $r = "**Equipa da ANJE Formação:**\n\n";
+            foreach ($equipa['diretoras'] as $m) { $r .= "• **{$m['cargo']}:** {$m['nome']}\n"; }
+            $r .= "\n**Coordenadores:**\n";
+            foreach ($equipa['coordenadores'] as $m) { $r .= "• {$m['nome']} - {$m['cargo']}\n"; }
+            return $r;
+        }
+
+        if ($this->matches_any($msg, ['orgaos', 'órgãos', 'orgão', 'órgão', 'conselho fiscal', 'assembleia', 'mesa', 'fiscal'])) {
+            $r = "**Órgãos Sociais da ANJE:**\n\n";
+            $r .= "🏛️ **Presidente:** {$orgaos['presidente']['nome']}\n\n**Vice-Presidentes:**\n";
+            foreach ($orgaos['vice_presidentes'] as $m) { $r .= "• {$m['nome']}\n"; }
+            $r .= "\n🏛️ **Assembleia Geral:** {$orgaos['assembleia'][0]['nome']}\n\n**Conselho Fiscal:**\n";
+            foreach ($orgaos['conselho_fiscal'] as $m) { $r .= "• {$m['nome']} - {$m['cargo']}\n"; }
+            return $r;
+        }
+
+        if ($this->matches_any($msg, ['presidente', 'quem é o presidente'])) {
+            return 'O presidente da ANJE é **' . $orgaos['presidente']['nome'] . '**.';
+        }
+
+        if ($this->matches_any($msg, ['contacto', 'contatos', 'email', 'telefone', 'morada', 'endereço', 'onde fica'])) {
+            return "📞 **Contactos da ANJE Formação:**\n\n📧 infoformacao@anje.pt\n📱 (+351) 220 108 074\n📍 Rua Paulo da Gama - Casa do Farol, 4169-006 Porto";
+        }
+
+        $courses = $this->fetch_courses_from_woocommerce();
+        if ($this->matches_any($msg, ['curso', 'cursos', 'formacao', 'formações', 'treinamento', 'workshop', 'excel', 'powerbi', 'gratuito', 'gratuitos', 'gratis', 'desempregado'])) {
+            return $this->search_courses_fallback($courses, $msg);
+        }
+
+        return "Não tenho essa informação específica. Posso ajudar com:\n\n• 📚 **Cursos e formações** - Pesquisa por área (IA, gestão, marketing, vendas, excel, powerbi...)\n• 💰 Preços e datas\n• 👥 **Equipa**\n• 📋 **Órgãos sociais**\n• 📞 **Contactos**\n\nOu contacte: infoformacao@anje.pt";
+    }
+
+    private function matches_any($msg, $keywords) {
+        foreach ($keywords as $kw) {
+            if (mb_strpos($msg, $kw) !== false) return true;
+        }
+        return false;
+    }
+
+    private function search_courses_fallback($courses, $query) {
+        $area_keywords = [
+            'excel' => ['excel', 'folha de c', 'folha de cál', 'folha de calculo'],
+            'powerbi' => ['power bi', 'powerbi', 'dashboard', 'dashboards'],
+            'ia' => ['inteligência artificial', ' claude', 'chatgpt', 'generativa', 'copilot'],
+            'gestão' => ['gestão', 'liderança', 'lideran', 'equipa', 'tempo', 'projeto', 'produtividade', 'burnout'],
+            'marketing' => ['marketing', 'digital', 'seo', 'influenc', 'instagram', 'linkedin'],
+            'vendas' => ['venda', 'vendas', 'comercial', 'crm', 'vendedor'],
+            'finanças' => ['financ', 'tesouraria', 'sql', 'python'],
+            'jurídico' => ['juridic', 'direito', 'rgpd', 'laboral', 'sociedade'],
+            'comunicação' => ['comunicar', 'storytelling', 'apresentac', 'impacto'],
+            'empreendedorismo' => ['empreend', 'negocio', 'startup', 'plano de neg'],
+            'gratuito' => ['gratuito', 'gratis', 'desempregado'],
+        ];
+
+        $matched_area = null;
+        foreach ($area_keywords as $area => $kws) {
+            foreach ($kws as $kw) {
+                if (mb_strpos($query, $kw) !== false) { $matched_area = $area; break 2; }
+            }
+        }
+
+        $filtered = [];
+        foreach ($courses as $c) {
+            $titulo = mb_strtolower($c['titulo']);
+            $preco = mb_strtolower($c['preco']);
+            if ($matched_area) {
+                foreach ($area_keywords[$matched_area] as $kw) {
+                    if (mb_strpos($titulo, $kw) !== false || mb_strpos($preco, $kw) !== false) {
+                        $filtered[] = $c; break;
+                    }
+                }
+            } else {
+                $filtered[] = $c;
+            }
+        }
+
+        if (empty($filtered)) {
+            return 'Não encontrei cursos para essa área. Pesquise por: IA, gestão, marketing, vendas, excel, powerbi...';
+        }
+
+        $response = 'Encontrei **' . count($filtered) . ' cursos**' . ($matched_area ? ' na área de ' . ucfirst($matched_area) : '') . ":\n\n";
+        $count = 0;
+        foreach ($filtered as $c) {
+            if ($count >= 10) { $response .= "\n_E mais " . (count($filtered) - 10) . " cursos!_"; break; }
+            $title = trim(preg_replace('/\s+/', ' ', $c['titulo']));
+            $response .= "• **{$title}** - {$c['preco']}\n  {$c['url']}\n\n";
+            $count++;
+        }
+        return $response;
     }
 
     /**
