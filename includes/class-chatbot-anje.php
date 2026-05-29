@@ -97,7 +97,7 @@ class ChatBot_ANJE_Formacao {
     public function render_chatbot() {
         $s = $this->get_settings();
         $name = esc_html($s['chatbot_name']);
-        $welcome = $s['welcome_message'] ?: "Ol\u00e1! \ud83d\udc4b Sou o assistente virtual da ANJE Forma\u00e7\u00e3o.\n\nPosso ajudar com:\n\u2022 \ud83d\udcda Cursos\n\u2022 \ud83d\udcb0 Pre\u00e7os e datas\n\u2022 \ud83d\udc65 Equipa\n\u2022 \ud83d\udcde Contactos\n\nO que procura?";
+        $welcome = $s['welcome_message'] ?: "Olá! 👋 Sou o assistente virtual da ANJE Formação.\n\nPosso ajudar com:\n• 📚 Cursos\n• 💰 Preços e datas\n• 👥 Equipa\n• 📞 Contactos\n\nO que procura?";
         $ajax = admin_url('admin-ajax.php');
         $nonce = wp_create_nonce('chatbot_anje_nonce');
         $timeout = intval($s['request_timeout']) * 1000;
@@ -153,7 +153,7 @@ class ChatBot_ANJE_Formacao {
                         else{addMsg('Erro: '+(r.data||'Desconhecido'),'bot')}
                     }catch(e){addMsg('Erro ao processar.','bot')}
                 };
-                xhr.onerror=function(){remTyping();addMsg('Erro de liga\u00e7\u00e3o.','bot')};
+                xhr.onerror=function(){remTyping();addMsg('Erro de ligação.','bot')};
                 xhr.ontimeout=function(){remTyping();addMsg('Timeout. Tente novamente.','bot')};
                 xhr.onreadystatechange=function(){if(xhr.readyState===4){busy=false;B.disabled=false;I.focus()}};
                 xhr.send('action=chatbot_anje_chat&message='+encodeURIComponent(msg)+'&nonce='+nonce)
@@ -270,18 +270,18 @@ class ChatBot_ANJE_Formacao {
         $courses = $this->fetch_courses_from_woocommerce();
 
         $area_keywords = [
-            'Excel' => ['excel', 'folha de c', 'folha de c\u00e1lculo', 'folha de calculo'],
+            'Excel' => ['excel', 'folha de c', 'folha de cálculo', 'folha de calculo'],
             'PowerBI' => ['power bi', 'powerbi', 'dashboard'],
-            'IA' => ['intelig\u00eancia artificial', ' claude', 'chatgpt', 'generativa', 'copilot'],
-            'Gest\u00e3o' => ['gest\u00e3o', 'lideran', 'lideran\u00e7a', 'equipa', 'tempo', 'projeto', 'produtividade', 'burnout'],
+            'IA' => ['inteligência artificial', ' claude', 'chatgpt', 'generativa', 'copilot'],
+            'Gestão' => ['gestão', 'lideran', 'liderança', 'equipa', 'tempo', 'projeto', 'produtividade', 'burnout'],
             'Marketing' => ['marketing', 'digital', 'ecommerce', 'e-commerce', 'seo', 'influenc'],
             'Vendas' => ['venda', 'vendas', 'comercial', 'neuromarketing', 'crm', 'vendedor'],
-            'Finan\u00e7as' => ['financ', 'tesouraria', 'poupanca', 'sql', 'python'],
-            'Jur\u00eddico' => ['juridic', 'direito', 'rgpd', 'laboral', 'sociedade', 'branqueamento'],
-            'Comunica\u00e7\u00e3o' => ['comunicar', 'storytelling', 'apresentac', 'impacto', 'pnl'],
+            'Finanças' => ['financ', 'tesouraria', 'poupanca', 'sql', 'python'],
+            'Jurídico' => ['juridic', 'direito', 'rgpd', 'laboral', 'sociedade', 'branqueamento'],
+            'Comunicação' => ['comunicar', 'storytelling', 'apresentac', 'impacto', 'pnl'],
             'Empreendedorismo' => ['empreend', 'negocio', 'startup', 'plano de neg', 'inovar'],
             'Hotelaria' => ['hotelaria', 'turismo', 'higiene', 'alimentar'],
-            'Certifica\u00e7\u00e3o' => ['certifica', 'icagile', 'coach', 'pnl practitioner'],
+            'Certificação' => ['certifica', 'icagile', 'coach', 'pnl practitioner'],
         ];
 
         $areas = [];
@@ -314,32 +314,32 @@ class ChatBot_ANJE_Formacao {
         $gratis = 0;
         foreach ($courses as $c) { if ($c['preco'] === 'Gratuito') $gratis++; }
 
-        return "\u00c9s o assistente virtual da ANJE Forma\u00e7\u00e3o (anjeformacao.pt).\n"
-            . "\nSOBRE: ANJE - Associa\u00e7\u00e3o Nacional de Jovens Empres\u00e1rios, fundada 1986. ANJE Forma\u00e7\u00e3o presente nas 5 regi\u00f5es, certificada DGERT.\n"
+        return "És o assistente virtual da ANJE Formação (anjeformacao.pt).\n"
+            . "\nSOBRE: ANJE - Associação Nacional de Jovens Empresários, fundada 1986. ANJE Formação presente nas 5 regiões, certificada DGERT.\n"
             . "\nEQUIPA:\n"
             . "- Ana Jogo Mendes - Diretora\n"
-            . "- Coordenadores: Cl\u00e1udia Almeida, Cristiana Moreira, Manuela Almeida, Vit\u00f3ria Pereira, Ana Rodrigues (Lisboa), Armanda \u00c2ngelo (Coimbra), C\u00e1tia Santos (Algarve), Patr\u00edcia Nobre (Alentejo)\n"
-            . "- Teresa Miranda - Comunica\u00e7\u00e3o e Marketing\n"
+            . "- Coordenadores: Cláudia Almeida, Cristiana Moreira, Manuela Almeida, Vitória Pereira, Ana Rodrigues (Lisboa), Armanda Ângelo (Coimbra), Cátia Santos (Algarve), Patrícia Nobre (Alentejo)\n"
+            . "- Teresa Miranda - Comunicação e Marketing\n"
             . "- Sara Almeida - Administrativa\n"
             . "- Susana Pereira - Administrativa\n"
-            . "- F\u00e1tima Pinto - Administrativa Coimbra\n"
-            . "\n\u00d3RG\u00c3OS SOCIAIS:\n"
+            . "- Fátima Pinto - Administrativa Coimbra\n"
+            . "\nÓRGÃOS SOCIAIS:\n"
             . "- Presidente: Carlos Carvalho\n"
-            . "- Vice-Presidentes: Nuno Malheiro, Filipa Pinto de Carvalho, Gon\u00e7alo Sim\u00f5es de Almeida\n"
+            . "- Vice-Presidentes: Nuno Malheiro, Filipa Pinto de Carvalho, Gonçalo Simões de Almeida\n"
             . "- Presidente Assembleia Geral: Miguel Moreira da Silva\n"
             . "- Presidente Conselho Fiscal: Catarina Azevedo\n"
             . "\nCONTACTOS: infoformacao@anje.pt | (+351) 220 108 074\n"
             . "MORADA: Rua Paulo da Gama - Casa do Farol, 4169-006 Porto\n"
             . "\nCURSOS: {$total} cursos ({$gratis} gratuitos)\n"
             . implode("\n", $course_lines) . "\n"
-            . "\nFORMA\u00c7\u00c3O-A\u00c7\u00c3O: programa para micro/PME, 90% FSE, Norte/Centro/Alentejo, at\u00e9 250 colaboradores, Inova\u00e7\u00e3o/Transi\u00e7\u00e3o Digital/ESG. Vitoria Pereira e Cristiana Moreira. https://anjeformacao.pt/formacao-acao-pme/\n"
+            . "\nFORMAÇÃO-AÇÃO: programa para micro/PME, 90% FSE, Norte/Centro/Alentejo, até 250 colaboradores, Inovação/Transição Digital/ESG. Vitoria Pereira e Cristiana Moreira. https://anjeformacao.pt/formacao-acao-pme/\n"
             . "\nREGRAS:\n"
-            . "- Portugu\u00eas de Portugal\n"
-            . "- Usa **negrita** para t\u00edtulos\n"
+            . "- Português de Portugal\n"
+            . "- Usa **negrita** para títulos\n"
             . "- URLs completos: https://anjeformacao.pt/curso/...\n"
-            . "- Lista TODOS os cursos dispon\u00edveis na \u00e1rea\n"
-            . "- N\u00e3o listes cursos para perguntas sobre equipa/org\u00e3os\n"
-            . "- Se n\u00e3o souberes: contacte infoformacao@anje.pt";
+            . "- Lista TODOS os cursos disponíveis na área\n"
+            . "- Não listes cursos para perguntas sobre equipa/orgãos\n"
+            . "- Se não souberes: contacte infoformacao@anje.pt";
     }
 
     /* WOOCOMMERCE */
@@ -370,7 +370,7 @@ class ChatBot_ANJE_Formacao {
                 if ($price === '0' || $price === 0 || $price === '') {
                     $price_display = 'Gratuito';
                 } elseif (is_numeric($price)) {
-                    $price_display = '\u20ac' . number_format((float)$price, 2, ',', '.');
+                    $price_display = '€' . number_format((float)$price, 2, ',', '.');
                 }
                 $courses[] = ['titulo' => $name, 'preco' => $price_display, 'url' => $url];
             }
@@ -387,34 +387,34 @@ class ChatBot_ANJE_Formacao {
 
     private function get_fallback_courses() {
         return [
-            ['titulo' => 'Como elaborar um Plano de Neg\u00f3cios | Forma\u00e7\u00e3o Ass\u00edncrona', 'preco' => '\u20ac150,00', 'url' => 'https://anjeformacao.pt/curso/como-elaborar-um-plano-de-negocios-formacao-assincrona/'],
-            ['titulo' => 'Programa Executivo Vendedor de Alta Performance | Online', 'preco' => '\u20ac280,00', 'url' => 'https://anjeformacao.pt/curso/programa-executivo-vendedor-de-alta-performance/'],
-            ['titulo' => 'RGPD para Gestores e Empreendedores | Forma\u00e7\u00e3o Ass\u00edncrona', 'preco' => '\u20ac180,00', 'url' => 'https://anjeformacao.pt/curso/rgpd-para-gestores-e-empreendedores-formacao-assincrona/'],
-            ['titulo' => 'Direito das Sociedades \u2013 Constitui\u00e7\u00e3o de Empresas | Forma\u00e7\u00e3o Ass\u00edncrona', 'preco' => '\u20ac175,00', 'url' => 'https://anjeformacao.pt/curso/direito-das-sociedades-constituicao-de-empresas-formacao-assincrona/'],
-            ['titulo' => 'Intelig\u00eancia Emocional para a Motiva\u00e7\u00e3o e Tomada de Decis\u00e3o | Online', 'preco' => '\u20ac480,00', 'url' => 'https://anjeformacao.pt/curso/inteligencia-emocional-para-a-motivacao-e-tomada-de-decisao-online/'],
-            ['titulo' => 'Direito Laboral para Gestores e Empreendedores | Forma\u00e7\u00e3o Ass\u00edncrona', 'preco' => '\u20ac190,00', 'url' => 'https://anjeformacao.pt/curso/direito-laboral-para-gestores-e-empreendedores-formacao-assincrona/'],
-            ['titulo' => 'Comunicar com Impacto | Online', 'preco' => '\u20ac150,00', 'url' => 'https://anjeformacao.pt/curso/comunicar-com-impacto-online/'],
-            ['titulo' => 'Intelig\u00eancia Artificial Aplicada \u2013 Claude AI | Online', 'preco' => '\u20ac150,00', 'url' => 'https://anjeformacao.pt/curso/inteligencia-artificial-aplicada-claude-ai-online/'],
-            ['titulo' => 'Inovar para Crescer: Ferramentas de Gest\u00e3o pr\u00e1ticas para PME | Online', 'preco' => '\u20ac180,00', 'url' => 'https://anjeformacao.pt/curso/inovar-para-crescer-ferramentas-de-gestao-praticas-para-pme-online/'],
-            ['titulo' => 'Microsoft Copilot aplicado ao contexto profissional | Online', 'preco' => '\u20ac180,00', 'url' => 'https://anjeformacao.pt/curso/microsoft-copilot-aplicado-ao-contexto-profissional-online/'],
-            ['titulo' => 'Intelig\u00eancia Artificial Aplicada ao Setor Imobili\u00e1rio | Online', 'preco' => '\u20ac150,00', 'url' => 'https://anjeformacao.pt/curso/inteligencia-artificial-aplicada-ao-setor-imobiliario-online/'],
-            ['titulo' => 'Intelig\u00eancia Artificial Aplicada a \u00c1rea Comercial | Online', 'preco' => '\u20ac150,00', 'url' => 'https://anjeformacao.pt/curso/inteligencia-artificial-aplicada-a-area-comercial-online/'],
-            ['titulo' => 'RGPC na Pr\u00e1tica | Online', 'preco' => '\u20ac150,00', 'url' => 'https://anjeformacao.pt/curso/rgpc-na-pratica-prevenir-riscos-cumprir-e-reforcar-a-integridade-online/'],
-            ['titulo' => 'Felicidade nas Organiza\u00e7\u00f5es | Online', 'preco' => '\u20ac135,00', 'url' => 'https://anjeformacao.pt/curso/felicidade-nas-organizacoes-cultura-seguranca-psicologica-e-bem-estar-sustentavel-online/'],
-            ['titulo' => 'Treino Intensivo em Lideran\u00e7a | Lisboa', 'preco' => '\u20ac1750,00', 'url' => 'https://anjeformacao.pt/curso/treino-intensivo-de-lideranca-lisboa/'],
-            ['titulo' => 'Programa Executivo em Vendas | Norte e Online', 'preco' => '\u20ac1890,00', 'url' => 'https://anjeformacao.pt/curso/programa-executivo-em-vendas/'],
-            ['titulo' => 'Lideran\u00e7a Anti-Burnout | Online', 'preco' => '\u20ac120,00', 'url' => 'https://anjeformacao.pt/curso/lideranca-anti-burnout-energia-limites-e-clareza-na-gestao-de-pessoas-online/'],
-            ['titulo' => 'IA Generativa como Ferramenta de Otimiza\u00e7\u00e3o | Online', 'preco' => '\u20ac350,00', 'url' => 'https://anjeformacao.pt/curso/ia-generativa-como-ferramenta-de-optimizacao-dos-negocios-online/'],
-            ['titulo' => 'Programa Executivo em Marketing Digital e E-commerce | Online', 'preco' => '\u20ac1800,00', 'url' => 'https://anjeformacao.pt/curso/programa-executivo-em-marketing-digital-e-e-commerce/'],
-            ['titulo' => 'Gest\u00e3o de Projetos | Online', 'preco' => '\u20ac190,00', 'url' => 'https://anjeformacao.pt/curso/gestao-de-projetos-online/'],
-            ['titulo' => 'Branqueamento de Capitais em Portugal | Online', 'preco' => '\u20ac150,00', 'url' => 'https://anjeformacao.pt/curso/branqueamento-de-capitais-em-portugal-online/'],
-            ['titulo' => 'Conduzir ao Fecho da Venda | Online', 'preco' => '\u20ac135,00', 'url' => 'https://anjeformacao.pt/curso/conduzir-ao-fecho-da-venda-online/'],
-            ['titulo' => 'Excel Avan\u00e7ado aplicado \u00e0 Gest\u00e3o | Algarve', 'preco' => 'Gratuito', 'url' => 'https://anjeformacao.pt/curso/excel-avancado-aplicado-a-gestao-ufcd-342219-algarve/'],
-            ['titulo' => 'Cria\u00e7\u00e3o de dashboards din\u00e2micos com PowerBI | Algarve', 'preco' => 'Gratuito', 'url' => 'https://anjeformacao.pt/curso/criacao-de-dashboards-dinamicos-com-powerbi-ufcfd-341107-algarve/'],
-            ['titulo' => 'Excel Inicia\u00e7\u00e3o | Algarve', 'preco' => 'Gratuito', 'url' => 'https://anjeformacao.pt/curso/excel-iniciacao-extra-catalogo-algarve/'],
-            ['titulo' => 'Folha de c\u00e1lculo \u2013 utiliza\u00e7\u00e3o interm\u00e9dia | Centro', 'preco' => 'Gratuito', 'url' => 'https://anjeformacao.pt/curso/folha-de-calculo-utilizacao-intermedia-centro/'],
-            ['titulo' => 'Produzir documentos em folha de c\u00e1lculo \u2013 UC 02775 | Norte', 'preco' => 'Gratuito', 'url' => 'https://anjeformacao.pt/curso/produzir-documentos-em-folha-de-calculo-uc-02775-norte-pessoas-2030/'],
-            ['titulo' => 'Produzir documentos em folha de c\u00e1lculo \u2013 UC 02775 | Algarve', 'preco' => 'Gratuito', 'url' => 'https://anjeformacao.pt/curso/produzir-documentos-em-folha-de-calculo-uc-02775-algarve/'],
+            ['titulo' => 'Como elaborar um Plano de Negócios | Formação Assíncrona', 'preco' => '€150,00', 'url' => 'https://anjeformacao.pt/curso/como-elaborar-um-plano-de-negocios-formacao-assincrona/'],
+            ['titulo' => 'Programa Executivo Vendedor de Alta Performance | Online', 'preco' => '€280,00', 'url' => 'https://anjeformacao.pt/curso/programa-executivo-vendedor-de-alta-performance/'],
+            ['titulo' => 'RGPD para Gestores e Empreendedores | Formação Assíncrona', 'preco' => '€180,00', 'url' => 'https://anjeformacao.pt/curso/rgpd-para-gestores-e-empreendedores-formacao-assincrona/'],
+            ['titulo' => 'Direito das Sociedades – Constituição de Empresas | Formação Assíncrona', 'preco' => '€175,00', 'url' => 'https://anjeformacao.pt/curso/direito-das-sociedades-constituicao-de-empresas-formacao-assincrona/'],
+            ['titulo' => 'Inteligência Emocional para a Motivação e Tomada de Decisão | Online', 'preco' => '€480,00', 'url' => 'https://anjeformacao.pt/curso/inteligencia-emocional-para-a-motivacao-e-tomada-de-decisao-online/'],
+            ['titulo' => 'Direito Laboral para Gestores e Empreendedores | Formação Assíncrona', 'preco' => '€190,00', 'url' => 'https://anjeformacao.pt/curso/direito-laboral-para-gestores-e-empreendedores-formacao-assincrona/'],
+            ['titulo' => 'Comunicar com Impacto | Online', 'preco' => '€150,00', 'url' => 'https://anjeformacao.pt/curso/comunicar-com-impacto-online/'],
+            ['titulo' => 'Inteligência Artificial Aplicada – Claude AI | Online', 'preco' => '€150,00', 'url' => 'https://anjeformacao.pt/curso/inteligencia-artificial-aplicada-claude-ai-online/'],
+            ['titulo' => 'Inovar para Crescer: Ferramentas de Gestão práticas para PME | Online', 'preco' => '€180,00', 'url' => 'https://anjeformacao.pt/curso/inovar-para-crescer-ferramentas-de-gestao-praticas-para-pme-online/'],
+            ['titulo' => 'Microsoft Copilot aplicado ao contexto profissional | Online', 'preco' => '€180,00', 'url' => 'https://anjeformacao.pt/curso/microsoft-copilot-aplicado-ao-contexto-profissional-online/'],
+            ['titulo' => 'Inteligência Artificial Aplicada ao Setor Imobiliário | Online', 'preco' => '€150,00', 'url' => 'https://anjeformacao.pt/curso/inteligencia-artificial-aplicada-ao-setor-imobiliario-online/'],
+            ['titulo' => 'Inteligência Artificial Aplicada a Área Comercial | Online', 'preco' => '€150,00', 'url' => 'https://anjeformacao.pt/curso/inteligencia-artificial-aplicada-a-area-comercial-online/'],
+            ['titulo' => 'RGPC na Prática | Online', 'preco' => '€150,00', 'url' => 'https://anjeformacao.pt/curso/rgpc-na-pratica-prevenir-riscos-cumprir-e-reforcar-a-integridade-online/'],
+            ['titulo' => 'Felicidade nas Organizações | Online', 'preco' => '€135,00', 'url' => 'https://anjeformacao.pt/curso/felicidade-nas-organizacoes-cultura-seguranca-psicologica-e-bem-estar-sustentavel-online/'],
+            ['titulo' => 'Treino Intensivo em Liderança | Lisboa', 'preco' => '€1750,00', 'url' => 'https://anjeformacao.pt/curso/treino-intensivo-de-lideranca-lisboa/'],
+            ['titulo' => 'Programa Executivo em Vendas | Norte e Online', 'preco' => '€1890,00', 'url' => 'https://anjeformacao.pt/curso/programa-executivo-em-vendas/'],
+            ['titulo' => 'Liderança Anti-Burnout | Online', 'preco' => '€120,00', 'url' => 'https://anjeformacao.pt/curso/lideranca-anti-burnout-energia-limites-e-clareza-na-gestao-de-pessoas-online/'],
+            ['titulo' => 'IA Generativa como Ferramenta de Otimização | Online', 'preco' => '€350,00', 'url' => 'https://anjeformacao.pt/curso/ia-generativa-como-ferramenta-de-optimizacao-dos-negocios-online/'],
+            ['titulo' => 'Programa Executivo em Marketing Digital e E-commerce | Online', 'preco' => '€1800,00', 'url' => 'https://anjeformacao.pt/curso/programa-executivo-em-marketing-digital-e-e-commerce/'],
+            ['titulo' => 'Gestão de Projetos | Online', 'preco' => '€190,00', 'url' => 'https://anjeformacao.pt/curso/gestao-de-projetos-online/'],
+            ['titulo' => 'Branqueamento de Capitais em Portugal | Online', 'preco' => '€150,00', 'url' => 'https://anjeformacao.pt/curso/branqueamento-de-capitais-em-portugal-online/'],
+            ['titulo' => 'Conduzir ao Fecho da Venda | Online', 'preco' => '€135,00', 'url' => 'https://anjeformacao.pt/curso/conduzir-ao-fecho-da-venda-online/'],
+            ['titulo' => 'Excel Avançado aplicado à Gestão | Algarve', 'preco' => 'Gratuito', 'url' => 'https://anjeformacao.pt/curso/excel-avancado-aplicado-a-gestao-ufcd-342219-algarve/'],
+            ['titulo' => 'Criação de dashboards dinâmicos com PowerBI | Algarve', 'preco' => 'Gratuito', 'url' => 'https://anjeformacao.pt/curso/criacao-de-dashboards-dinamicos-com-powerbi-ufcfd-341107-algarve/'],
+            ['titulo' => 'Excel Iniciação | Algarve', 'preco' => 'Gratuito', 'url' => 'https://anjeformacao.pt/curso/excel-iniciacao-extra-catalogo-algarve/'],
+            ['titulo' => 'Folha de cálculo – utilização intermédia | Centro', 'preco' => 'Gratuito', 'url' => 'https://anjeformacao.pt/curso/folha-de-calculo-utilizacao-intermedia-centro/'],
+            ['titulo' => 'Produzir documentos em folha de cálculo – UC 02775 | Norte', 'preco' => 'Gratuito', 'url' => 'https://anjeformacao.pt/curso/produzir-documentos-em-folha-de-calculo-uc-02775-norte-pessoas-2030/'],
+            ['titulo' => 'Produzir documentos em folha de cálculo – UC 02775 | Algarve', 'preco' => 'Gratuito', 'url' => 'https://anjeformacao.pt/curso/produzir-documentos-em-folha-de-calculo-uc-02775-algarve/'],
         ];
     }
 
@@ -422,25 +422,25 @@ class ChatBot_ANJE_Formacao {
 
     private function get_rule_based_response($msg) {
         $equipa = [
-            ['nome' => 'Ana Jogo Mendes', 'cargo' => 'Diretora ANJE Forma\u00e7\u00e3o'],
-            ['nome' => 'Cl\u00e1udia Almeida', 'cargo' => 'Coordenadora'],
+            ['nome' => 'Ana Jogo Mendes', 'cargo' => 'Diretora ANJE Formação'],
+            ['nome' => 'Cláudia Almeida', 'cargo' => 'Coordenadora'],
             ['nome' => 'Cristiana Moreira', 'cargo' => 'Coordenadora'],
             ['nome' => 'Manuela Almeida', 'cargo' => 'Coordenadora'],
-            ['nome' => 'Vit\u00f3ria Pereira', 'cargo' => 'Coordenadora'],
+            ['nome' => 'Vitória Pereira', 'cargo' => 'Coordenadora'],
             ['nome' => 'Ana Rodrigues', 'cargo' => 'Coordenadora Lisboa'],
-            ['nome' => 'Armanda \u00c2ngelo', 'cargo' => 'Coordenadora Coimbra'],
-            ['nome' => 'C\u00e1tia Santos', 'cargo' => 'Coordenadora Algarve'],
-            ['nome' => 'Patr\u00edcia Nobre', 'cargo' => 'Coordenadora Alentejo'],
+            ['nome' => 'Armanda Ângelo', 'cargo' => 'Coordenadora Coimbra'],
+            ['nome' => 'Cátia Santos', 'cargo' => 'Coordenadora Algarve'],
+            ['nome' => 'Patrícia Nobre', 'cargo' => 'Coordenadora Alentejo'],
             ['nome' => 'Sara Almeida', 'cargo' => 'Administrativa'],
             ['nome' => 'Susana Pereira', 'cargo' => 'Administrativa'],
-            ['nome' => 'F\u00e1tima Pinto', 'cargo' => 'Administrativa Coimbra'],
-            ['nome' => 'Teresa Miranda', 'cargo' => 'Comunica\u00e7\u00e3o e Marketing'],
+            ['nome' => 'Fátima Pinto', 'cargo' => 'Administrativa Coimbra'],
+            ['nome' => 'Teresa Miranda', 'cargo' => 'Comunicação e Marketing'],
         ];
         $orgaos = [
             ['nome' => 'Carlos Carvalho', 'cargo' => 'Presidente'],
             ['nome' => 'Nuno Malheiro', 'cargo' => 'Vice-Presidente'],
             ['nome' => 'Filipa Pinto de Carvalho', 'cargo' => 'Vice-Presidente'],
-            ['nome' => 'Gon\u00e7alo Sim\u00f5es de Almeida', 'cargo' => 'Vice-Presidente'],
+            ['nome' => 'Gonçalo Simões de Almeida', 'cargo' => 'Vice-Presidente'],
             ['nome' => 'Miguel Moreira da Silva', 'cargo' => 'Presidente da Assembleia Geral'],
             ['nome' => 'Catarina Azevedo', 'cargo' => 'Presidente do Conselho Fiscal'],
             ['nome' => 'Pedro Cardoso', 'cargo' => 'Vice-Presidente do Conselho Fiscal'],
@@ -450,39 +450,39 @@ class ChatBot_ANJE_Formacao {
         // Person search
         foreach (array_merge($equipa, $orgaos) as $p) {
             if (mb_strpos($msg, mb_strtolower($p['nome'])) !== false) {
-                return "\ud83d\udc64 **{$p['nome']}** - {$p['cargo']}";
+                return "👤 **{$p['nome']}** - {$p['cargo']}";
             }
         }
 
-        if ($this->match_kw($msg, ['formacao acao', 'formacao-acao', 'forma\u00e7\u00e3o a\u00e7\u00e3o', 'formacao acao'])) {
-            return "\ud83d\udccb **Forma\u00e7\u00e3o-A\u00e7\u00e3o para PME:**\n\nPrograma de forma\u00e7\u00e3o \u00e0 medida para micro, pequenas e m\u00e9dias empresas.\n\n\ud83d\udcb0 Financiamento: 90% FSE, 10% empresa\n\ud83d\udccd Regi\u00f5es: Norte, Centro, Alentejo\n\ud83c\udfe2 Destinat\u00e1rios: Micro/PME at\u00e9 250 colaboradores\n\ud83d\udccc \u00c1reas: Inova\u00e7\u00e3o, Transi\u00e7\u00e3o Digital, ESG\n\n\ud83d\udc69\u200d\ud83d\udcbc Respons\u00e1veis:\n\u2022 Vit\u00f3ria Pereira - vitoriapereira@anje.pt\n\u2022 Cristiana Moreira - cristianamoreira@anje.pt\n\n\u2139\ufe0f https://anjeformacao.pt/formacao-acao-pme/\n\ud83d\udce7 infoformacao@anje.pt";
+        if ($this->match_kw($msg, ['formacao acao', 'formacao-acao', 'formação ação', 'formacao acao'])) {
+            return "📋 **Formação-Ação para PME:**\n\nPrograma de formação à medida para micro, pequenas e médias empresas.\n\n💰 Financiamento: 90% FSE, 10% empresa\n📍 Regiões: Norte, Centro, Alentejo\n🏢 Destinatários: Micro/PME até 250 colaboradores\n📌 Áreas: Inovação, Transição Digital, ESG\n\n👩‍💼 Responsáveis:\n• Vitória Pereira - vitoriapereira@anje.pt\n• Cristiana Moreira - cristianamoreira@anje.pt\n\nℹ️ https://anjeformacao.pt/formacao-acao-pme/\n📧 infoformacao@anje.pt";
         }
 
         if ($this->match_kw($msg, ['equipa', 'equipe', 'staff', 'funcionarios', 'quem trabalha', 'diretor', 'diretoras'])) {
-            $r = "**Equipa da ANJE Forma\u00e7\u00e3o:**\n\n";
-            foreach ($equipa as $p) { $r .= "\u2022 {$p['nome']} - {$p['cargo']}\n"; }
+            $r = "**Equipa da ANJE Formação:**\n\n";
+            foreach ($equipa as $p) { $r .= "• {$p['nome']} - {$p['cargo']}\n"; }
             return $r;
         }
 
-        if ($this->match_kw($msg, ['orgaos', 'orgaos', 'org\u00e3o', 'org\u00e3o', 'conselho fiscal', 'assembleia', 'mesa', 'fiscal'])) {
-            $r = "**\u00d3rg\u00e3os Sociais da ANJE:**\n\n";
-            foreach ($orgaos as $p) { $r .= "\u2022 {$p['nome']} - {$p['cargo']}\n"; }
+        if ($this->match_kw($msg, ['orgaos', 'orgaos', 'orgão', 'orgão', 'conselho fiscal', 'assembleia', 'mesa', 'fiscal'])) {
+            $r = "**Órgãos Sociais da ANJE:**\n\n";
+            foreach ($orgaos as $p) { $r .= "• {$p['nome']} - {$p['cargo']}\n"; }
             return $r;
         }
 
-        if ($this->match_kw($msg, ['presidente', 'quem e o presidente', 'quem \u00e9 o presidente'])) {
-            return 'O presidente da ANJE \u00e9 **Carlos Carvalho**.';
+        if ($this->match_kw($msg, ['presidente', 'quem e o presidente', 'quem é o presidente'])) {
+            return 'O presidente da ANJE é **Carlos Carvalho**.';
         }
 
-        if ($this->match_kw($msg, ['contacto', 'contatos', 'email', 'telefone', 'morada', 'endereco', 'endere\u00e7o', 'onde fica', 'localiza\u00e7\u00e3o'])) {
-            return "\ud83d\udcde **Contactos da ANJE Forma\u00e7\u00e3o:**\n\n\ud83d\udce7 infoformacao@anje.pt\n\ud83d\udcf1 (+351) 220 108 074\n\ud83d\udccd Rua Paulo da Gama - Casa do Farol, 4169-006 Porto";
+        if ($this->match_kw($msg, ['contacto', 'contatos', 'email', 'telefone', 'morada', 'endereco', 'endereço', 'onde fica', 'localização'])) {
+            return "📞 **Contactos da ANJE Formação:**\n\n📧 infoformacao@anje.pt\n📱 (+351) 220 108 074\n📍 Rua Paulo da Gama - Casa do Farol, 4169-006 Porto";
         }
 
-        if ($this->match_kw($msg, ['curso', 'cursos', 'formacao', 'formacoes', 'forma\u00e7\u00e3o', 'forma\u00e7\u00f5es', 'treinamento', 'workshop', 'excel', 'powerbi', 'power bi', 'gratuito', 'gratuitos', 'gratis', 'desempregado', 'desempregados'])) {
+        if ($this->match_kw($msg, ['curso', 'cursos', 'formacao', 'formacoes', 'formação', 'formações', 'treinamento', 'workshop', 'excel', 'powerbi', 'power bi', 'gratuito', 'gratuitos', 'gratis', 'desempregado', 'desempregados'])) {
             return $this->search_courses($msg);
         }
 
-        return "N\u00e3o tenho essa informa\u00e7\u00e3o espec\u00edfica. Posso ajudar com:\n\n\u2022 \ud83d\udcda **Cursos e forma\u00e7\u00f5es** - Pesquisa por \u00e1rea (IA, gest\u00e3o, marketing, vendas, excel, powerbi...)\n\u2022 \ud83d\udcb0 Pre\u00e7os e datas\n\u2022 \ud83d\udc65 **Equipa**\n\u2022 \ud83d\udccb **\u00d3rg\u00e3os sociais**\n\u2022 \ud83d\udcde **Contactos**\n\nOu contacte: infoformacao@anje.pt";
+        return "Não tenho essa informação específica. Posso ajudar com:\n\n• 📚 **Cursos e formações** - Pesquisa por área (IA, gestão, marketing, vendas, excel, powerbi...)\n• 💰 Preços e datas\n• 👥 **Equipa**\n• 📋 **Órgãos sociais**\n• 📞 **Contactos**\n\nOu contacte: infoformacao@anje.pt";
     }
 
     private function match_kw($msg, $keywords) {
@@ -496,18 +496,18 @@ class ChatBot_ANJE_Formacao {
         $courses = $this->fetch_courses_from_woocommerce();
 
         $area_map = [
-            'excel' => ['excel', 'folha de c', 'folha de c\u00e1lculo', 'folha de calculo'],
+            'excel' => ['excel', 'folha de c', 'folha de cálculo', 'folha de calculo'],
             'powerbi' => ['power bi', 'powerbi', 'dashboard'],
-            'ia' => ['intelig\u00eancia artificial', ' claude', 'chatgpt', 'generativa', 'copilot'],
-            'gest\u00e3o' => ['gest\u00e3o', 'lideran', 'lideran\u00e7a', 'equipa', 'tempo', 'projeto', 'produtividade', 'burnout'],
+            'ia' => ['inteligência artificial', ' claude', 'chatgpt', 'generativa', 'copilot'],
+            'gestão' => ['gestão', 'lideran', 'liderança', 'equipa', 'tempo', 'projeto', 'produtividade', 'burnout'],
             'marketing' => ['marketing', 'digital', 'ecommerce', 'e-commerce', 'seo', 'influenc'],
             'vendas' => ['venda', 'vendas', 'comercial', 'neuromarketing', 'crm', 'vendedor'],
-            'finan\u00e7as' => ['financ', 'tesouraria', 'poupanca', 'sql', 'python'],
-            'jur\u00eddico' => ['juridic', 'direito', 'rgpd', 'laboral', 'sociedade', 'branqueamento'],
-            'comunica\u00e7\u00e3o' => ['comunicar', 'storytelling', 'apresentac', 'impacto', 'pnl'],
+            'finanças' => ['financ', 'tesouraria', 'poupanca', 'sql', 'python'],
+            'jurídico' => ['juridic', 'direito', 'rgpd', 'laboral', 'sociedade', 'branqueamento'],
+            'comunicação' => ['comunicar', 'storytelling', 'apresentac', 'impacto', 'pnl'],
             'empreendedorismo' => ['empreend', 'negocio', 'startup', 'plano de neg', 'inovar'],
             'hotelaria' => ['hotelaria', 'turismo', 'higiene', 'alimentar'],
-            'certifica\u00e7\u00e3o' => ['certifica', 'icagile', 'coach', 'pnl practitioner'],
+            'certificação' => ['certifica', 'icagile', 'coach', 'pnl practitioner'],
             'gratuito' => ['gratuito', 'gratis', 'desempregado'],
         ];
 
@@ -534,15 +534,15 @@ class ChatBot_ANJE_Formacao {
         }
 
         if (empty($filtered)) {
-            return 'N\u00e3o encontrei cursos para essa \u00e1rea. Pesquise por: IA, gest\u00e3o, marketing, vendas, excel, powerbi, jur\u00eddico, comunica\u00e7\u00e3o, empreendedorismo...';
+            return 'Não encontrei cursos para essa área. Pesquise por: IA, gestão, marketing, vendas, excel, powerbi, jurídico, comunicação, empreendedorismo...';
         }
 
-        $response = 'Encontrei **' . count($filtered) . ' cursos**' . ($matched_area ? ' na \u00e1rea de ' . ucfirst($matched_area) : '') . ":\n\n";
+        $response = 'Encontrei **' . count($filtered) . ' cursos**' . ($matched_area ? ' na área de ' . ucfirst($matched_area) : '') . ":\n\n";
         $count = 0;
         foreach ($filtered as $c) {
             if ($count >= 10) { $response .= "\n_E mais " . (count($filtered) - 10) . " cursos!_"; break; }
             $title = trim(preg_replace('/\s+/', ' ', html_entity_decode($c['titulo'], ENT_QUOTES, 'UTF-8')));
-            $response .= "\u2022 **{$title}** - {$c['preco']}\n  {$c['url']}\n\n";
+            $response .= "• **{$title}** - {$c['preco']}\n  {$c['url']}\n\n";
             $count++;
         }
         return $response;
@@ -551,7 +551,7 @@ class ChatBot_ANJE_Formacao {
     /* ADMIN */
 
     public function add_admin_menu() {
-        add_options_page('ChatBot ANJE Forma\u00e7\u00e3o', 'ChatBot ANJE', 'manage_options', 'chatbot-anje-formacao', [$this, 'admin_page']);
+        add_options_page('ChatBot ANJE Formação', 'ChatBot ANJE', 'manage_options', 'chatbot-anje-formacao', [$this, 'admin_page']);
     }
 
     public function register_settings() {
@@ -577,7 +577,7 @@ class ChatBot_ANJE_Formacao {
         $s = $this->get_settings();
         ?>
         <div class="wrap">
-            <h1>\ud83e\udd16 ChatBot ANJE Forma\u00e7\u00e3o</h1>
+            <h1>🤖 ChatBot ANJE Formação</h1>
             <form method="post" action="options.php">
                 <?php settings_fields('chatbot_anje_grp'); ?>
                 <table class="form-table">
@@ -590,12 +590,12 @@ class ChatBot_ANJE_Formacao {
                         <p class="description">URL do backend Flask (recomendado). Se vazio, usa API key direta ou fallback rule-based.</p></td></tr>
                     <tr><th><label>OpenRouter API Key</label></th>
                         <td><input type="password" name="chatbot_anje_formacao_settings[openrouter_key]" value="<?php echo esc_attr($s['openrouter_key']); ?>" class="regular-text" placeholder="sk-or-...">
-                        <p class="description">Apenas se n\u00e3o usar backend. <a href="https://openrouter.ai/keys" target="_blank">Obter key</a></p></td></tr>
+                        <p class="description">Apenas se não usar backend. <a href="https://openrouter.ai/keys" target="_blank">Obter key</a></p></td></tr>
                     <tr><th><label>Modelo LLM</label></th>
                         <td><input type="text" name="chatbot_anje_formacao_settings[model]" value="<?php echo esc_attr($s['model']); ?>" class="regular-text"></td></tr>
                     <tr><th><label>Cor Principal</label></th>
                         <td><input type="color" name="chatbot_anje_formacao_settings[primary_color]" value="<?php echo esc_attr($s['primary_color']); ?>"></td></tr>
-                    <tr><th><label>Posi\u00e7\u00e3o</label></th>
+                    <tr><th><label>Posição</label></th>
                         <td><select name="chatbot_anje_formacao_settings[position]">
                             <option value="right" <?php selected($s['position'], 'right'); ?>>Direita</option>
                             <option value="left" <?php selected($s['position'], 'left'); ?>>Esquerda</option>
@@ -604,7 +604,7 @@ class ChatBot_ANJE_Formacao {
                         <td><input type="number" name="chatbot_anje_formacao_settings[max_tokens]" value="<?php echo esc_attr($s['max_tokens']); ?>" min="200" max="4000" class="small-text"></td></tr>
                     <tr><th><label>Timeout (segundos)</label></th>
                         <td><input type="number" name="chatbot_anje_formacao_settings[request_timeout]" value="<?php echo esc_attr($s['request_timeout']); ?>" min="15" max="120" class="small-text"></td></tr>
-                    <tr><th>Mostrar em todas as p\u00e1ginas</th>
+                    <tr><th>Mostrar em todas as páginas</th>
                         <td><label><input type="checkbox" name="chatbot_anje_formacao_settings[show_on_all_pages]" value="yes" <?php checked($s['show_on_all_pages'], 'yes'); ?>> Sim</label></td></tr>
                 </table>
                 <?php submit_button('Guardar'); ?>
@@ -612,10 +612,10 @@ class ChatBot_ANJE_Formacao {
             <hr>
             <h2>Estado</h2>
             <table class="widefat" style="max-width:600px">
-                <thead><tr><th>Configura\u00e7\u00e3o</th><th>Estado</th></tr></thead>
+                <thead><tr><th>Configuração</th><th>Estado</th></tr></thead>
                 <tbody>
-                    <tr><td>Backend URL</td><td><?php echo !empty($s['backend_url']) ? '<span style="color:green">\u2713 Configurado</span> <code>' . esc_html($s['backend_url']) . '</code>' : '<span style="color:orange">\u2713 N\u00e3o configurado (usa fallback)</span>'; ?></td></tr>
-                    <tr><td>OpenRouter API Key</td><td><?php echo !empty($s['openrouter_key']) ? '<span style="color:green">\u2713 Configurada</span>' : '<span style="color:orange">\u2713 N\u00e3o configurada</span>'; ?></td></tr>
+                    <tr><td>Backend URL</td><td><?php echo !empty($s['backend_url']) ? '<span style="color:green">✓ Configurado</span> <code>' . esc_html($s['backend_url']) . '</code>' : '<span style="color:orange">✓ Não configurado (usa fallback)</span>'; ?></td></tr>
+                    <tr><td>OpenRouter API Key</td><td><?php echo !empty($s['openrouter_key']) ? '<span style="color:green">✓ Configurada</span>' : '<span style="color:orange">✓ Não configurada</span>'; ?></td></tr>
                 </tbody>
             </table>
         </div>
