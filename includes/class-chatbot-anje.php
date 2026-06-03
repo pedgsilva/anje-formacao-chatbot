@@ -692,16 +692,16 @@ class ChatBot_ANJE_Formacao {
             return "📞 **Contactos da ANJE Formação:**\n\n📧 infoformacao@anje.pt\n📱 (+351) 220 108 074\n📍 Rua Paulo da Gama - Casa do Farol, 4169-006 Porto";
         }
 
+        if ($this->match_kw($msg, ['processamento de texto', 'word', 'microsoft word', 'writer', 'openoffice', 'libreoffice'])) {
+            return "Não temos cursos de processamento de texto neste momento. As nossas áreas de formação incluem:\n\n• Excel / Folha de cálculo\n• PowerBI / Dashboards\n• Inteligência Artificial\n• Gestão e Liderança\n• Marketing Digital\n• Vendas\n• Finanças\n• Jurídico\n• Comunicação\n• Empreendedorismo\n\nPesquise por qualquer uma destas áreas!";
+        }
+
         if ($this->is_date_query($msg)) {
             return $this->search_variable_courses($msg);
         }
 
         if ($this->match_kw($msg, ['curso', 'cursos', 'formacao', 'formacoes', 'formação', 'formações', 'treinamento', 'workshop', 'excel', 'powerbi', 'power bi', 'gratuito', 'gratuitos', 'gratis', 'desempregado', 'desempregados'])) {
             return $this->search_courses($msg);
-        }
-
-        if ($this->match_kw($msg, ['processamento de texto', 'word', 'microsoft word', 'writer', 'openoffice', 'libreoffice'])) {
-            return "Não temos cursos de processamento de texto neste momento. As nossas áreas de formação incluem:\n\n• Excel / Folha de cálculo\n• PowerBI / Dashboards\n• Inteligência Artificial\n• Gestão e Liderança\n• Marketing Digital\n• Vendas\n• Finanças\n• Jurídico\n• Comunicação\n• Empreendedorismo\n\nPesquise por qualquer uma destas áreas!";
         }
 
         if ($this->match_kw($msg, ['coordenadora', 'coordenador', 'responsavel', 'responsável', 'quem é', 'quem e'])) {
