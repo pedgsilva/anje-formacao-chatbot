@@ -370,7 +370,7 @@ class ChatBot_ANJE_Formacao {
             . "\\n5. Formato: **Titulo** - Preco\\n  URL\\n\\n"
             . "\\n6. Portugues de Portugal.\\n"
             . "\\n---\\n"
-            . "\\nEQUIPA: Ana Jogo Mendes (Diretora). Coordenadores: Claudia Almeida, Cristiana Moreira, Manuela Almeida, Vitoria Pereira, Ana Rodrigues (Lisboa), Armanda Angelo (Coimbra), Catia Santos (Algarve), Patricia Nobre (Alentejo). Teresa Miranda (Comunicacao). Sara Almeida, Susana Pereira, Fatima Pinto (Administrativas).\\n"
+            . "\\nEQUIPA: Ana Jogo Mendes (Diretora). Coordenadores: Claudia Almeida, Cristiana Moreira, Manuela Almeida, Vitoria Pereira (Norte), Ana Rodrigues (Lisboa), Armanda Angelo (Coimbra), Catia Santos (Algarve), Patricia Nobre (Alentejo). Teresa Miranda (Comunicacao). Sara Almeida, Susana Pereira, Fatima Pinto (Administrativas).\\n"
             . "\\nORGAOS SOCIAIS: Carlos Carvalho (Presidente). VPs: Nuno Malheiro, Filipa Pinto de Carvalho, Goncalo Simoes de Almeida. Assembleia: Miguel Moreira da Silva. Conselho Fiscal: Catarina Azevedo (Presidente), Pedro Cardoso (VP), Sofia Xavier (Vogal).\\n"
             . "\\nCONTACTOS: infoformacao@anje.pt | (+351) 220 108 074\\n"
             . "\\n---\\n"
@@ -443,6 +443,7 @@ class ChatBot_ANJE_Formacao {
             . "- Coimbra: Armanda Angelo\n"
             . "- Algarve: Catia Santos\n"
             . "- Alentejo: Patricia Nobre\n"
+            . "- Norte: Claudia Almeida, Manuela Almeida, Vitoria Pereira, Cristiana Moreira\n"
             . "- Outros: Claudia Almeida, Cristiana Moreira, Manuela Almeida, Vitoria Pereira\n"
             . "Comunicacao: Teresa Miranda\n"
             . "Administrativas: Sara Almeida, Susana Pereira, Fatima Pinto (Coimbra)\n"
@@ -710,9 +711,13 @@ class ChatBot_ANJE_Formacao {
                 'coimbra' => 'Armanda Ângelo',
                 'algarve' => 'Cátia Santos',
                 'alentejo' => 'Patrícia Nobre',
+                'norte' => 'Cláudia Almeida, Manuela Almeida, Vitória Pereira e Cristiana Moreira',
             ];
             foreach ($coordenadores as $regiao => $nome) {
                 if (mb_strpos($msg, $regiao) !== false) {
+                    if ($regiao === 'norte') {
+                        return "As coordenadoras da região do Norte são: **Cláudia Almeida, Manuela Almeida, Vitória Pereira e Cristiana Moreira**.";
+                    }
                     return "A coordenadora da região de " . ucfirst($regiao) . " é **{$nome}**.";
                 }
             }
