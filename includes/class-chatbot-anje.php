@@ -270,9 +270,29 @@ class ChatBot_ANJE_Formacao {
         $courses = $this->fetch_courses_from_woocommerce();
 
         $all_courses_lines = [];
+        $all_terms = [];
         foreach ($courses as $c) {
             $title = mb_strlen($c['titulo']) > 50 ? mb_substr($c['titulo'], 0, 47) . '...' : $c['titulo'];
-            $all_courses_lines[] = '- ' . $title . ' (' . $c['preco'] . ') - ' . $c['url'];
+            $term_str = '';
+            if (!empty($c['terms'])) {
+                $parts = [];
+                if (isset($c['terms']['pa_regime'])) $parts[] = 'Regime:' . implode(',', $c['terms']['pa_regime']);
+                if (isset($c['terms']['pa_tipologia'])) $parts[] = 'Tipo:' . implode(',', $c['terms']['pa_tipologia']);
+                if (isset($c['terms']['pa_regiao'])) $parts[] = 'Regiao:' . implode(',', $c['terms']['pa_regiao']);
+                if (isset($c['terms']['product_cat'])) $parts[] = 'Cat:' . implode(',', $c['terms']['product_cat']);
+                if (!empty($parts)) $term_str = ' [' . implode(' ', $parts) . ']';
+                foreach ($c['terms'] as $tax => $slugs) {
+                    foreach ($slugs as $slug) {
+                        $all_terms[$tax][$slug] = true;
+                    }
+                }
+            }
+            $all_courses_lines[] = '- ' . $title . ' (' . $c['preco'] . ') - ' . $c['url'] . $term_str;
+        }
+
+        $terms_summary = [];
+        foreach ($all_terms as $tax => $slugs) {
+            $terms_summary[] = $tax . ': ' . implode(',', array_keys($slugs));
         }
 
         $total = count($courses);
@@ -285,20 +305,35 @@ class ChatBot_ANJE_Formacao {
             . "\nCONTACTOS: infoformacao@anje.pt | (+351) 220 108 074 | Rua Paulo da Gama - Casa do Farol, 4169-006 Porto\n"
             . "\n=== CURSOS ({$total} total, {$gratis} gratuitos) - USA SO ESTES, NAO INVENTES ===\n"
             . implode("\n", $all_courses_lines) . "\n"
-            . "\nAREAS: Excel, PowerBI, IA/Inteligencia Artificial, Gestao/Lideranca, Marketing/Digital, Vendas/Comercial, Financas, Juridico/RGPD, Comunicacao, Empreendedorismo, Hotelaria, Certificacao\n"
+            . "\nTAXONOMIAS: " . implode('; ', $terms_summary) . "\n"
             . "\nFORMACAO-ACAO: programa PME, 90% FSE, Norte/Centro/Alentejo, ate 250 colaboradores, Inovacao/Transicao Digital/ESG. Vitoria Pereira e Cristiana Moreira. https://anjeformacao.pt/formacao-acao-pme/\n"
             . "\nREGRAS:\n"
             . "- Portugues de Portugal\n"
             . "- **negrita** para titulos\n"
             . "- URLs: https://anjeformacao.pt/curso/...\n"
             . "- NAO INVENTAR cursos, nomes, precos ou URLs. Usar SO os cursos da lista.\n"
-            . "- Area inexistente (ex: processamento de texto, fotografia): responder 'Nao temos cursos nessa area. Areas: Excel, PowerBI, IA, Gestao, Marketing, Vendas, Financas, Juridico, Comunicacao, Empreendedorismo, Hotelaria, Certificacao'\n"
+            . "- Filtrar por taxonomia (Regime/Tipo/Regiao) quando possivel, nao so pelo titulo.\n"
+            . "- Area inexistente (ex: processamento de texto, fotografia): responder 'Nao temos cursos nessa area.'\n"
             . "- Datas/agendados: so produtos variaveis (get_attribute('data') nas variacoes). Se nao houver: 'nao ha cursos com datas agendadas'\n"
             . "- Equipa/orgaos: nao listar cursos\n"
             . "- Duvida: infoformacao@anje.pt";
     }
 
     /* WOOCOMMERCE */
+
+    private function get_product_terms($product_id) {
+        $taxonomies = ['product_cat', 'pa_regime', 'pa_tipologia', 'pa_regiao', 'product_tag'];
+        $terms = [];
+        foreach ($taxonomies as $tax) {
+            $product_terms = get_the_terms($product_id, $tax);
+            if ($product_terms && !is_wp_error($product_terms)) {
+                foreach ($product_terms as $t) {
+                    $terms[$tax][] = $t->slug;
+                }
+            }
+        }
+        return $terms;
+    }
 
     private function fetch_courses_from_woocommerce() {
         $cached = get_transient('chatbot_anje_courses_cache');
@@ -328,7 +363,13 @@ class ChatBot_ANJE_Formacao {
                 } elseif (is_numeric($price)) {
                     $price_display = '€' . number_format((float)$price, 2, ',', '.');
                 }
-                $courses[] = ['titulo' => $name, 'preco' => $price_display, 'url' => $url];
+                $terms = $this->get_product_terms(get_the_ID());
+                $courses[] = [
+                    'titulo' => $name,
+                    'preco' => $price_display,
+                    'url' => $url,
+                    'terms' => $terms,
+                ];
             }
             wp_reset_postdata();
         }
@@ -569,12 +610,26 @@ class ChatBot_ANJE_Formacao {
         foreach ($courses as $c) {
             $titulo = mb_strtolower(html_entity_decode($c['titulo'], ENT_QUOTES, 'UTF-8'));
             $preco = mb_strtolower($c['preco']);
+            $terms = isset($c['terms']) ? $c['terms'] : [];
             if ($matched_area) {
-                foreach ($area_map[$matched_area] as $kw) {
-                    if (mb_strpos($titulo, $kw) !== false || mb_strpos($preco, $kw) !== false) {
-                        $filtered[] = $c; break;
+                $matched = false;
+                // First try to match by WooCommerce taxonomy terms
+                foreach ($terms as $tax => $slugs) {
+                    foreach ($slugs as $slug) {
+                        if (mb_strpos($slug, $matched_area) !== false) {
+                            $matched = true; break 2;
+                        }
                     }
                 }
+                // Fallback: match by keyword in title/price
+                if (!$matched) {
+                    foreach ($area_map[$matched_area] as $kw) {
+                        if (mb_strpos($titulo, $kw) !== false || mb_strpos($preco, $kw) !== false) {
+                            $matched = true; break;
+                        }
+                    }
+                }
+                if ($matched) $filtered[] = $c;
             } else {
                 $filtered[] = $c;
             }
