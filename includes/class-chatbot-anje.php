@@ -282,7 +282,7 @@ class ChatBot_ANJE_Formacao {
         }
         $max_tokens = intval($settings['max_tokens']) ?: 800;
 
-        $system_prompt = $this->build_system_prompt($settings);
+        $system_prompt = $this->build_gemini_prompt($settings);
 
         $payload = [
             'contents' => [
@@ -362,24 +362,102 @@ class ChatBot_ANJE_Formacao {
         $gratis = 0;
         foreach ($courses as $c) { if ($c['preco'] === 'Gratuito') $gratis++; }
 
-        return "Assistente ANJE Formacao (anjeformacao.pt). ANJE fundada 1986, formacao certificada DGERT, 5 regioes.\n"
-            . "\nEQUIPA: Ana Jogo Mendes (Diretora). Coordenadores: Claudia Almeida, Cristiana Moreira, Manuela Almeida, Vitoria Pereira, Ana Rodrigues (Lisboa), Armanda Angelo (Coimbra), Catia Santos (Algarve), Patricia Nobre (Alentejo). Teresa Miranda (Comunicacao). Sara Almeida, Susana Pereira, Fatima Pinto (Administrativas).\n"
-            . "\nORGAOS SOCIAIS: Carlos Carvalho (Presidente). VPs: Nuno Malheiro, Filipa Pinto de Carvalho, Goncalo Simoes de Almeida. Assembleia: Miguel Moreira da Silva. Conselho Fiscal: Catarina Azevedo (Presidente), Pedro Cardoso (VP), Sofia Xavier (Vogal).\n"
-            . "\nCONTACTOS: infoformacao@anje.pt | (+351) 220 108 074 | Rua Paulo da Gama - Casa do Farol, 4169-006 Porto\n"
-            . "\n=== CURSOS ({$total} total, {$gratis} gratuitos) - USA SO ESTES, NAO INVENTES ===\n"
+        return "INSTRUCOES ESTRITAS - SEGUE EXATAMENTE:\\n"
+            . "\\n1. Assistente ANJE Formacao (anjeformacao.pt). ANJE fundada 1986, formacao certificada DGERT, 5 regioes.\\n"
+            . "\\n2. SO podes listar cursos da lista abaixo. NAO inventes NENHUM curso, nome, preco ou URL.\\n"
+            . "\\n3. Se a pergunta for sobre algo que NAO existe na lista (ex: processamento de texto, word, fotografia, contabilidade, musica), responde APENAS: 'Nao temos cursos nessa area.' - NAO listes nenhum curso.\\n"
+            . "\\n4. Se a pergunta for sobre uma area que existe, lista APENAS os cursos dessa area da lista abaixo.\\n"
+            . "\\n5. Formato: **Titulo** - Preco\\n  URL\\n\\n"
+            . "\\n6. Portugues de Portugal.\\n"
+            . "\\n---\\n"
+            . "\\nEQUIPA: Ana Jogo Mendes (Diretora). Coordenadores: Claudia Almeida, Cristiana Moreira, Manuela Almeida, Vitoria Pereira, Ana Rodrigues (Lisboa), Armanda Angelo (Coimbra), Catia Santos (Algarve), Patricia Nobre (Alentejo). Teresa Miranda (Comunicacao). Sara Almeida, Susana Pereira, Fatima Pinto (Administrativas).\\n"
+            . "\\nORGAOS SOCIAIS: Carlos Carvalho (Presidente). VPs: Nuno Malheiro, Filipa Pinto de Carvalho, Goncalo Simoes de Almeida. Assembleia: Miguel Moreira da Silva. Conselho Fiscal: Catarina Azevedo (Presidente), Pedro Cardoso (VP), Sofia Xavier (Vogal).\\n"
+            . "\\nCONTACTOS: infoformacao@anje.pt | (+351) 220 108 074\\n"
+            . "\\n---\\n"
+            . "\\n=== LISTA DE CURSOS ({$total} total, {$gratis} gratuitos) - ESTES SAO OS UNICOS CURSOS QUE EXISTEM ===\\n"
+            . implode("\\n", $all_courses_lines) . "\\n"
+            . "\\nTAXONOMIAS EXISTENTES: " . implode('; ', $terms_summary) . "\\n"
+            . "\\nFORMACAO-ACAO: programa PME, 90% FSE, Norte/Centro/Alentejo, ate 250 colaboradores, Inovacao/Transicao Digital/ESG. https://anjeformacao.pt/formacao-acao-pme/\\n"
+            . "\\nDuvida: infoformacao@anje.pt";
+    }
+
+    /* PROMPT ESPECIFICO PARA GEMINI - mais curto e direto */
+
+    private function get_gemini_all_courses_lines() {
+        $courses = $this->fetch_courses_from_woocommerce();
+        $all_courses_lines = [];
+        $all_terms = [];
+        foreach ($courses as $c) {
+            $title = mb_strlen($c['titulo']) > 50 ? mb_substr($c['titulo'], 0, 47) . '...' : $c['titulo'];
+            $term_str = '';
+            if (!empty($c['terms'])) {
+                $parts = [];
+                if (isset($c['terms']['pa_regime'])) $parts[] = 'Regime:' . implode(',', $c['terms']['pa_regime']);
+                if (isset($c['terms']['pa_tipologia'])) $parts[] = 'Tipo:' . implode(',', $c['terms']['pa_tipologia']);
+                if (isset($c['terms']['pa_regiao'])) $parts[] = 'Regiao:' . implode(',', $c['terms']['pa_regiao']);
+                if (isset($c['terms']['product_cat'])) $parts[] = 'Cat:' . implode(',', $c['terms']['product_cat']);
+                if (!empty($parts)) $term_str = ' [' . implode(' ', $parts) . ']';
+                foreach ($c['terms'] as $tax => $slugs) {
+                    foreach ($slugs as $slug) {
+                        $all_terms[$tax][$slug] = true;
+                    }
+                }
+            }
+            $all_courses_lines[] = '- ' . $title . ' (' . $c['preco'] . ') - ' . $c['url'] . $term_str;
+        }
+
+        $terms_summary = [];
+        foreach ($all_terms as $tax => $slugs) {
+            $terms_summary[] = $tax . ': ' . implode(',', array_keys($slugs));
+        }
+
+        $total = count($courses);
+        $gratis = 0;
+        foreach ($courses as $c) { if ($c['preco'] === 'Gratuito') $gratis++; }
+
+        return [
+            'lines' => $all_courses_lines,
+            'terms' => $terms_summary,
+            'total' => $total,
+            'gratis' => $gratis,
+        ];
+    }
+
+    private function build_gemini_prompt($settings) {
+        $data = $this->get_gemini_all_courses_lines();
+        $total = $data['total'];
+        $gratis = $data['gratis'];
+        $all_courses_lines = $data['lines'];
+        $terms_summary = $data['terms'];
+
+        return "Tu es o assistente virtual da ANJE Formacao.\n"
+            . "Responde APENFTAMENTE em portugues de Portugal.\n"
+            . "Sobre cursos: usa APENAS a lista abaixo. Areas inexistentes: responde 'Nao temos cursos nessa area.' Sem inventar.\n"
+            . "Sobre a equipa: usa os dados abaixo. Nao inventes nomes.\n"
+            . "Formato de resposta: **Nome:** Cargo (uma pessoa por linha, separar seccoes com linha em branco)\n"
+            . "\n---\n"
+            . "EQUIPA:\n"
+            . "Diretoria: Ana Jogo Mendes (Diretora ANJE Formacao)\n"
+            . "Coordenadores por regiao:\n"
+            . "- Lisboa: Ana Rodrigues\n"
+            . "- Coimbra: Armanda Angelo\n"
+            . "- Algarve: Catia Santos\n"
+            . "- Alentejo: Patricia Nobre\n"
+            . "- Outros: Claudia Almeida, Cristiana Moreira, Manuela Almeida, Vitoria Pereira\n"
+            . "Comunicacao: Teresa Miranda\n"
+            . "Administrativas: Sara Almeida, Susana Pereira, Fatima Pinto (Coimbra)\n"
+            . "\nORGAOS SOCIAIS:\n"
+            . "Presidente: Carlos Carvalho\n"
+            . "Vice-Presidentes: Nuno Malheiro, Filipa Pinto de Carvalho, Goncalo Simoes de Almeida\n"
+            . "Assembleia Geral: Miguel Moreira da Silva (Presidente)\n"
+            . "Conselho Fiscal: Catarina Azevedo (Presidente), Pedro Cardoso (VP), Sofia Xavier (Vogal)\n"
+            . "\nCONTACTOS: infoformacao@anje.pt | (+351) 220 108 074\n"
+            . "\n---\n"
+            . "CURSOS ({$total} total, {$gratis} gratuitos):\n"
             . implode("\n", $all_courses_lines) . "\n"
             . "\nTAXONOMIAS: " . implode('; ', $terms_summary) . "\n"
-            . "\nFORMACAO-ACAO: programa PME, 90% FSE, Norte/Centro/Alentejo, ate 250 colaboradores, Inovacao/Transicao Digital/ESG. Vitoria Pereira e Cristiana Moreira. https://anjeformacao.pt/formacao-acao-pme/\n"
-            . "\nREGRAS:\n"
-            . "- Portugues de Portugal\n"
-            . "- **negrita** para titulos\n"
-            . "- URLs: https://anjeformacao.pt/curso/...\n"
-            . "- NAO INVENTAR cursos, nomes, precos ou URLs. Usar SO os cursos da lista.\n"
-            . "- Filtrar por taxonomia (Regime/Tipo/Regiao) quando possivel, nao so pelo titulo.\n"
-            . "- Area inexistente (ex: processamento de texto, fotografia): responder 'Nao temos cursos nessa area.'\n"
-            . "- Datas/agendados: so produtos variaveis (get_attribute('data') nas variacoes). Se nao houver: 'nao ha cursos com datas agendadas'\n"
-            . "- Equipa/orgaos: nao listar cursos\n"
-            . "- Duvida: infoformacao@anje.pt";
+            . "\nFORMACAO-ACAO: programa PME, 90% FSE, Norte/Centro/Alentejo, ate 250 colaboradores. https://anjeformacao.pt/formacao-acao-pme/\n"
+            . "\nDuvida: infoformacao@anje.pt";
     }
 
     /* WOOCOMMERCE */
