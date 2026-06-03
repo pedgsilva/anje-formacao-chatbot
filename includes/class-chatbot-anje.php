@@ -33,6 +33,8 @@ class ChatBot_ANJE_Formacao {
             'chatbot_name' => 'ChatBot ANJE',
             'backend_url' => '',
             'openrouter_key' => '',
+            'gemini_key' => '',
+            'api_provider' => 'openrouter',
             'model' => 'openrouter/owl-alpha',
             'welcome_message' => '',
             'primary_color' => '#007bff',
@@ -196,6 +198,14 @@ class ChatBot_ANJE_Formacao {
             return;
         }
 
+        $provider = $settings['api_provider'] ?: 'openrouter';
+
+        if ($provider === 'gemini' && !empty($settings['gemini_key'])) {
+            $response = $this->call_gemini($msg, $settings);
+            wp_send_json_success(['response' => $response]);
+            return;
+        }
+
         $response = $this->call_openrouter($msg, $settings);
         wp_send_json_success(['response' => $response]);
     }
@@ -262,6 +272,59 @@ class ChatBot_ANJE_Formacao {
         }
 
         return $data['choices'][0]['message']['content'];
+    }
+
+    private function call_gemini($msg, $settings) {
+        $key = $settings['gemini_key'];
+        $model = $settings['model'] ?: 'gemini-2.0-flash';
+        if (strpos($model, 'openrouter/') === 0) {
+            $model = 'gemini-2.0-flash';
+        }
+        $max_tokens = intval($settings['max_tokens']) ?: 800;
+
+        $system_prompt = $this->build_system_prompt($settings);
+
+        $payload = [
+            'contents' => [
+                ['role' => 'user', 'parts' => [['text' => $system_prompt . "\n\n" . $msg]]],
+            ],
+            'generationConfig' => [
+                'temperature' => 0.3,
+                'maxOutputTokens' => $max_tokens,
+            ],
+        ];
+
+        $json_body = json_encode($payload, JSON_UNESCAPED_UNICODE);
+        if ($json_body === false) {
+            return $this->get_rule_based_response(strtolower(trim($msg)));
+        }
+
+        $response = wp_remote_post(
+            "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$key}",
+            [
+                'timeout' => intval($settings['request_timeout']),
+                'headers' => ['Content-Type' => 'application/json'],
+                'body' => $json_body,
+            ]
+        );
+
+        if (is_wp_error($response)) {
+            return $this->get_rule_based_response(strtolower(trim($msg)));
+        }
+
+        $response_code = wp_remote_retrieve_response_code($response);
+        $response_body = wp_remote_retrieve_body($response);
+
+        if ($response_code !== 200) {
+            return $this->get_rule_based_response(strtolower(trim($msg)));
+        }
+
+        $data = json_decode($response_body, true);
+        if (json_last_error() !== JSON_ERROR_NONE || !isset($data['candidates'][0]['content']['parts'][0]['text'])) {
+            return $this->get_rule_based_response(strtolower(trim($msg)));
+        }
+
+        return $data['candidates'][0]['content']['parts'][0]['text'];
     }
 
     /* SYSTEM PROMPT for LLM */
@@ -742,6 +805,8 @@ class ChatBot_ANJE_Formacao {
         $out['chatbot_name'] = sanitize_text_field($input['chatbot_name'] ?? 'ChatBot ANJE');
         $out['backend_url'] = esc_url_raw($input['backend_url'] ?? '');
         $out['openrouter_key'] = sanitize_text_field($input['openrouter_key'] ?? '');
+        $out['gemini_key'] = sanitize_text_field($input['gemini_key'] ?? '');
+        $out['api_provider'] = in_array($input['api_provider'] ?? '', ['openrouter', 'gemini']) ? $input['api_provider'] : 'openrouter';
         $out['model'] = sanitize_text_field($input['model'] ?? 'openrouter/owl-alpha');
         $out['welcome_message'] = sanitize_textarea_field($input['welcome_message'] ?? '');
         $out['primary_color'] = sanitize_hex_color($input['primary_color'] ?? '#007bff');
@@ -767,11 +832,20 @@ class ChatBot_ANJE_Formacao {
                     <tr><th><label>URL do Backend Flask</label></th>
                         <td><input type="url" name="chatbot_anje_formacao_settings[backend_url]" value="<?php echo esc_attr($s['backend_url']); ?>" class="regular-text" placeholder="https://exemplo.com:5000">
                         <p class="description">URL do backend Flask (recomendado). Se vazio, usa API key direta ou fallback rule-based.</p></td></tr>
+                    <tr><th><label>API Provider</label></th>
+                        <td><select name="chatbot_anje_formacao_settings[api_provider]">
+                            <option value="openrouter" <?php selected($s['api_provider'], 'openrouter'); ?>>OpenRouter</option>
+                            <option value="gemini" <?php selected($s['api_provider'], 'gemini'); ?>>Google Gemini</option>
+                        </select></td></tr>
                     <tr><th><label>OpenRouter API Key</label></th>
                         <td><input type="password" name="chatbot_anje_formacao_settings[openrouter_key]" value="<?php echo esc_attr($s['openrouter_key']); ?>" class="regular-text" placeholder="sk-or-...">
-                        <p class="description">Apenas se não usar backend. <a href="https://openrouter.ai/keys" target="_blank">Obter key</a></p></td></tr>
+                        <p class="description">Usado quando o provider é OpenRouter. <a href="https://openrouter.ai/keys" target="_blank">Obter key</a></p></td></tr>
+                    <tr><th><label>Google Gemini API Key</label></th>
+                        <td><input type="password" name="chatbot_anje_formacao_settings[gemini_key]" value="<?php echo esc_attr($s['gemini_key']); ?>" class="regular-text" placeholder="AIza...">
+                        <p class="description">Usado quando o provider é Gemini. <a href="https://aistudio.google.com/app/apikey" target="_blank">Obter key</a></p></td></tr>
                     <tr><th><label>Modelo LLM</label></th>
-                        <td><input type="text" name="chatbot_anje_formacao_settings[model]" value="<?php echo esc_attr($s['model']); ?>" class="regular-text"></td></tr>
+                        <td><input type="text" name="chatbot_anje_formacao_settings[model]" value="<?php echo esc_attr($s['model']); ?>" class="regular-text">
+                        <p class="description">OpenRouter: openrouter/owl-alpha, openrouter/anthropic/claude-3.5-sonnet... | Gemini: gemini-2.0-flash, gemini-2.0-flash-lite, gemini-1.5-pro</p></td></tr>
                     <tr><th><label>Cor Principal</label></th>
                         <td><input type="color" name="chatbot_anje_formacao_settings[primary_color]" value="<?php echo esc_attr($s['primary_color']); ?>"></td></tr>
                     <tr><th><label>Posição</label></th>
