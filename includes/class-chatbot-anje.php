@@ -338,6 +338,7 @@ class ChatBot_ANJE_Formacao {
             . "- Usa **negrita** para títulos\n"
             . "- URLs completos: https://anjeformacao.pt/curso/...\n"
             . "- Lista TODOS os cursos disponíveis na área\n"
+            . "- Cursos com datas (agendados/marcados): mostra APENAS produtos variáveis (não simples). Usa get_attribute('data') nas variações. Se não houver produtos variáveis, diz 'não há cursos com datas agendadas'\n"
             . "- Não listes cursos para perguntas sobre equipa/orgãos\n"
             . "- Se não souberes: contacte infoformacao@anje.pt";
     }
@@ -383,6 +384,82 @@ class ChatBot_ANJE_Formacao {
         }
 
         return $this->get_fallback_courses();
+    }
+
+    private function fetch_variable_courses_from_woocommerce() {
+        $cached = get_transient('chatbot_anje_variable_courses_cache');
+        if ($cached !== false) return $cached;
+
+        $courses = [];
+        $query = new WP_Query([
+            'post_type' => 'product',
+            'posts_per_page' => 100,
+            'post_status' => 'publish',
+            'post_parent' => 0,
+        ]);
+
+        if ($query->have_posts()) {
+            while ($query->have_posts()) {
+                $query->the_post();
+                $product = wc_get_product(get_the_ID());
+                if (!$product) continue;
+                if (!$product->is_type('variable')) continue;
+                $url = get_permalink(get_the_ID());
+                if (strpos($url, '/curso/') === false) continue;
+                $name = $product->get_name();
+                if (empty(trim($name))) continue;
+                $children = $product->get_children();
+                if (empty($children)) continue;
+                $dates = [];
+                $prices = [];
+                foreach ($children as $child_id) {
+                    $variation = wc_get_product($child_id);
+                    if (!$variation) continue;
+                    $v_price = $variation->get_price();
+                    if ($v_price === '0' || $v_price === 0 || $v_price === '') {
+                        $prices[] = 'Gratuito';
+                    } elseif (is_numeric($v_price)) {
+                        $prices[] = '€' . number_format((float)$v_price, 2, ',', '.');
+                    }
+                    $v_date = $variation->get_attribute('data');
+                    if (empty($v_date)) {
+                        $v_date = $variation->get_attribute('date');
+                    }
+                    if (empty($v_date)) {
+                        $v_date = $variation->get_attribute('pa_data');
+                    }
+                    if (!empty($v_date)) {
+                        $dates[] = $v_date;
+                    }
+                }
+                $price_display = 'Sob consulta';
+                if (!empty($prices)) {
+                    $unique_prices = array_unique($prices);
+                    $price_display = count($unique_prices) === 1 ? reset($unique_prices) : implode(' / ', array_slice($unique_prices, 0, 3));
+                }
+                $dates_display = '';
+                if (!empty($dates)) {
+                    $unique_dates = array_unique($dates);
+                    sort($unique_dates);
+                    $dates_display = implode(', ', $unique_dates);
+                }
+                $courses[] = [
+                    'titulo' => $name,
+                    'preco' => $price_display,
+                    'url' => $url,
+                    'dates' => $dates_display,
+                    'is_variable' => true,
+                ];
+            }
+            wp_reset_postdata();
+        }
+
+        if (!empty($courses)) {
+            set_transient('chatbot_anje_variable_courses_cache', $courses, HOUR_IN_SECONDS);
+            return $courses;
+        }
+
+        return [];
     }
 
     private function get_fallback_courses() {
@@ -478,6 +555,10 @@ class ChatBot_ANJE_Formacao {
             return "📞 **Contactos da ANJE Formação:**\n\n📧 infoformacao@anje.pt\n📱 (+351) 220 108 074\n📍 Rua Paulo da Gama - Casa do Farol, 4169-006 Porto";
         }
 
+        if ($this->is_date_query($msg)) {
+            return $this->search_variable_courses($msg);
+        }
+
         if ($this->match_kw($msg, ['curso', 'cursos', 'formacao', 'formacoes', 'formação', 'formações', 'treinamento', 'workshop', 'excel', 'powerbi', 'power bi', 'gratuito', 'gratuitos', 'gratis', 'desempregado', 'desempregados'])) {
             return $this->search_courses($msg);
         }
@@ -543,6 +624,83 @@ class ChatBot_ANJE_Formacao {
             if ($count >= 10) { $response .= "\n_E mais " . (count($filtered) - 10) . " cursos!_"; break; }
             $title = trim(preg_replace('/\s+/', ' ', html_entity_decode($c['titulo'], ENT_QUOTES, 'UTF-8')));
             $response .= "• **{$title}** - {$c['preco']}\n  {$c['url']}\n\n";
+            $count++;
+        }
+        return $response;
+    }
+
+    private function is_date_query($msg) {
+        $date_keywords = [
+            'data', 'datas', 'agendado', 'agendados', 'agendada', 'agendadas',
+            'marcado', 'marcados', 'marcada', 'marcadas',
+            'proxima', 'próxima', 'proximas', 'próximas',
+            'proximo', 'próximo', 'proximos', 'próximos',
+            'edicao', 'edição', 'edicoes', 'edições',
+            'calendario', 'calendário', 'agenda',
+            'quando', 'programacao', 'programação',
+            'inicio', 'início', 'começa', 'comeca',
+            'inscricao', 'inscrição', 'inscricoes', 'inscrições',
+        ];
+        return $this->match_kw($msg, $date_keywords);
+    }
+
+    private function search_variable_courses($query) {
+        $courses = $this->fetch_variable_courses_from_woocommerce();
+
+        if (empty($courses)) {
+            return 'Neste momento não há cursos com datas agendadas. Consulte todos os cursos em https://anjeformacao.pt ou contacte infoformacao@anje.pt';
+        }
+
+        $area_map = [
+            'excel' => ['excel', 'folha de c', 'folha de cálculo', 'folha de calculo'],
+            'powerbi' => ['power bi', 'powerbi', 'dashboard'],
+            'ia' => ['inteligência artificial', ' claude', 'chatgpt', 'generativa', 'copilot'],
+            'gestão' => ['gestão', 'lideran', 'liderança', 'equipa', 'tempo', 'projeto', 'produtividade', 'burnout'],
+            'marketing' => ['marketing', 'digital', 'ecommerce', 'e-commerce', 'seo', 'influenc'],
+            'vendas' => ['venda', 'vendas', 'comercial', 'neuromarketing', 'crm', 'vendedor'],
+            'finanças' => ['financ', 'tesouraria', 'poupanca', 'sql', 'python'],
+            'jurídico' => ['juridic', 'direito', 'rgpd', 'laboral', 'sociedade', 'branqueamento'],
+            'comunicação' => ['comunicar', 'storytelling', 'apresentac', 'impacto', 'pnl'],
+            'empreendedorismo' => ['empreend', 'negocio', 'startup', 'plano de neg', 'inovar'],
+            'hotelaria' => ['hotelaria', 'turismo', 'higiene', 'alimentar'],
+            'certificação' => ['certifica', 'icagile', 'coach', 'pnl practitioner'],
+        ];
+
+        $matched_area = null;
+        foreach ($area_map as $area => $kws) {
+            foreach ($kws as $kw) {
+                if (mb_strpos($query, $kw) !== false) { $matched_area = $area; break 2; }
+            }
+        }
+
+        $filtered = [];
+        foreach ($courses as $c) {
+            $titulo = mb_strtolower(html_entity_decode($c['titulo'], ENT_QUOTES, 'UTF-8'));
+            if ($matched_area) {
+                foreach ($area_map[$matched_area] as $kw) {
+                    if (mb_strpos($titulo, $kw) !== false) {
+                        $filtered[] = $c; break;
+                    }
+                }
+            } else {
+                $filtered[] = $c;
+            }
+        }
+
+        if (empty($filtered)) {
+            return 'Não encontrei cursos com datas para essa área. Pesquise por: IA, gestão, marketing, vendas, excel, powerbi...';
+        }
+
+        $response = '📅 **Cursos com datas agendadas**' . ($matched_area ? ' na área de ' . ucfirst($matched_area) : '') . " (" . count($filtered) . "):\n\n";
+        $count = 0;
+        foreach ($filtered as $c) {
+            if ($count >= 10) { $response .= "\n_E mais " . (count($filtered) - 10) . " cursos com datas!_"; break; }
+            $title = trim(preg_replace('/\\s+/', ' ', html_entity_decode($c['titulo'], ENT_QUOTES, 'UTF-8')));
+            $response .= "• **{$title}** - {$c['preco']}";
+            if (!empty($c['dates'])) {
+                $response .= "\n  📌 Datas: {$c['dates']}";
+            }
+            $response .= "\n  {$c['url']}\n\n";
             $count++;
         }
         return $response;
