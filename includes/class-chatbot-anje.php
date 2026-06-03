@@ -701,11 +701,30 @@ class ChatBot_ANJE_Formacao {
         }
 
         if ($this->match_kw($msg, ['processamento de texto', 'word', 'microsoft word', 'writer', 'openoffice', 'libreoffice'])) {
-            $result = $this->search_courses($msg);
-            if (strpos($result, 'Não encontrei') !== false) {
-                return "Não temos cursos de processamento de texto neste momento. As nossas áreas de formação incluem:\n\n• Excel / Folha de cálculo\n• PowerBI / Dashboards\n• Inteligência Artificial\n• Gestão e Liderança\n• Marketing Digital\n• Vendas\n• Finanças\n• Jurídico\n• Comunicação\n• Empreendedorismo\n\nPesquise por qualquer uma destas áreas!";
+            return "Não temos cursos de processamento de texto neste momento. As nossas áreas de formação incluem:\n\n• Excel / Folha de cálculo\n• PowerBI / Dashboards\n• Inteligência Artificial\n• Gestão e Liderança\n• Marketing Digital\n• Vendas\n• Finanças\n• Jurídico\n• Comunicação\n• Empreendedorismo\n\nPesquise por qualquer uma destas áreas!";
+        }
+
+        if ($this->match_kw($msg, ['coordenadora', 'coordenador', 'responsavel', 'responsável', 'quem é', 'quem e'])) {
+            $coordenadores = [
+                'lisboa' => 'Ana Rodrigues',
+                'coimbra' => 'Armanda Ângelo',
+                'algarve' => 'Cátia Santos',
+                'alentejo' => 'Patrícia Nobre',
+            ];
+            foreach ($coordenadores as $regiao => $nome) {
+                if (mb_strpos($msg, $regiao) !== false) {
+                    return "A coordenadora da região de " . ucfirst($regiao) . " é **{$nome}**.";
+                }
             }
-            return $result;
+            $r = "**Coordenadores por região:**\n\n";
+            foreach ($coordenadores as $regiao => $nome) {
+                $r .= "• " . ucfirst($regiao) . ": {$nome}\n";
+            }
+            return $r;
+        }
+
+        if ($this->match_kw($msg, ['curso', 'cursos', 'formacao', 'formacoes', 'formação', 'formações', 'treinamento', 'workshop', 'excel', 'powerbi', 'power bi', 'gratuito', 'gratuitos', 'gratis', 'desempregado', 'desempregados'])) {
+            return $this->search_courses($msg);
         }
 
         return "Não tenho essa informação específica. Posso ajudar com:\n\n• 📚 **Cursos e formações** - Pesquisa por área (IA, gestão, marketing, vendas, excel, powerbi...)\n• 💰 Preços e datas\n• 👥 **Equipa**\n• 📋 **Órgãos sociais**\n• 📞 **Contactos**\n\nOu contacte: infoformacao@anje.pt";
@@ -772,7 +791,18 @@ class ChatBot_ANJE_Formacao {
                 }
                 if ($matched) $filtered[] = $c;
             } else {
-                $filtered[] = $c;
+                // No area matched — try to filter by keyword in title
+                $query_lower = mb_strtolower($query);
+                $query_words = preg_split('/\s+/', $query_lower);
+                foreach ($courses as $c) {
+                    $titulo_lower = mb_strtolower(html_entity_decode($c['titulo'], ENT_QUOTES, 'UTF-8'));
+                    foreach ($query_words as $word) {
+                        if (mb_strlen($word) > 2 && mb_strpos($titulo_lower, $word) !== false) {
+                            $filtered[] = $c;
+                            break;
+                        }
+                    }
+                }
             }
         }
 
