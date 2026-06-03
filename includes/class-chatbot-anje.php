@@ -310,6 +310,12 @@ class ChatBot_ANJE_Formacao {
             $course_lines[] = $area . ': ' . implode('; ', $names);
         }
 
+        $all_courses_lines = [];
+        foreach ($courses as $c) {
+            $title = mb_strlen($c['titulo']) > 50 ? mb_substr($c['titulo'], 0, 47) . '...' : $c['titulo'];
+            $all_courses_lines[] = '- ' . $title . ' (' . $c['preco'] . ') - ' . $c['url'];
+        }
+
         $total = count($courses);
         $gratis = 0;
         foreach ($courses as $c) { if ($c['preco'] === 'Gratuito') $gratis++; }
@@ -330,14 +336,16 @@ class ChatBot_ANJE_Formacao {
             . "- Presidente Conselho Fiscal: Catarina Azevedo\n"
             . "\nCONTACTOS: infoformacao@anje.pt | (+351) 220 108 074\n"
             . "MORADA: Rua Paulo da Gama - Casa do Farol, 4169-006 Porto\n"
-            . "\nCURSOS: {$total} cursos ({$gratis} gratuitos)\n"
-            . implode("\n", $course_lines) . "\n"
+            . "\n=== LISTA COMPLETA DE CURSOS ({$total} cursos, {$gratis} gratuitos) - USA APENAS ESTES, NÃO INVENTES NENHUM ===\n"
+            . implode("\n", $all_courses_lines) . "\n"
+            . "\nÁREAS DE FORMAÇÃO DISPONÍVEIS: Excel, PowerBI, Inteligência Artificial, Gestão, Marketing, Vendas, Finanças, Jurídico, Comunicação, Empreendedorismo, Hotelaria, Certificação\n"
             . "\nFORMAÇÃO-AÇÃO: programa para micro/PME, 90% FSE, Norte/Centro/Alentejo, até 250 colaboradores, Inovação/Transição Digital/ESG. Vitoria Pereira e Cristiana Moreira. https://anjeformacao.pt/formacao-acao-pme/\n"
-            . "\nREGRAS:\n"
+            . "\nREGRAS OBRIGATÓRIAS:\n"
             . "- Português de Portugal\n"
             . "- Usa **negrita** para títulos\n"
             . "- URLs completos: https://anjeformacao.pt/curso/...\n"
-            . "- Lista TODOS os cursos disponíveis na área\n"
+            . "- NUNCA inventes cursos, nomes, preços ou URLs. Usa APENAS os cursos da lista acima.\n"
+            . "- Se a pergunta for sobre uma área que não existe na lista (ex: processamento de texto, fotografia, contabilidade), responde: 'Não temos cursos nessa área. As nossas áreas são: Excel, PowerBI, IA, Gestão, Marketing, Vendas, Finanças, Jurídico, Comunicação, Empreendedorismo, Hotelaria, Certificação'\n"
             . "- Cursos com datas (agendados/marcados): mostra APENAS produtos variáveis (não simples). Usa get_attribute('data') nas variações. Se não houver produtos variáveis, diz 'não há cursos com datas agendadas'\n"
             . "- Não listes cursos para perguntas sobre equipa/orgãos\n"
             . "- Se não souberes: contacte infoformacao@anje.pt";
