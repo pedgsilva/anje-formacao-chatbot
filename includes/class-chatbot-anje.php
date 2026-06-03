@@ -269,47 +269,6 @@ class ChatBot_ANJE_Formacao {
     private function build_system_prompt($settings) {
         $courses = $this->fetch_courses_from_woocommerce();
 
-        $area_keywords = [
-            'Excel' => ['excel', 'folha de c', 'folha de cálculo', 'folha de calculo'],
-            'PowerBI' => ['power bi', 'powerbi', 'dashboard'],
-            'IA' => ['inteligência artificial', ' claude', 'chatgpt', 'generativa', 'copilot'],
-            'Gestão' => ['gestão', 'lideran', 'liderança', 'equipa', 'tempo', 'projeto', 'produtividade', 'burnout'],
-            'Marketing' => ['marketing', 'digital', 'ecommerce', 'e-commerce', 'seo', 'influenc'],
-            'Vendas' => ['venda', 'vendas', 'comercial', 'neuromarketing', 'crm', 'vendedor'],
-            'Finanças' => ['financ', 'tesouraria', 'poupanca', 'sql', 'python'],
-            'Jurídico' => ['juridic', 'direito', 'rgpd', 'laboral', 'sociedade', 'branqueamento'],
-            'Comunicação' => ['comunicar', 'storytelling', 'apresentac', 'impacto', 'pnl'],
-            'Empreendedorismo' => ['empreend', 'negocio', 'startup', 'plano de neg', 'inovar'],
-            'Hotelaria' => ['hotelaria', 'turismo', 'higiene', 'alimentar'],
-            'Certificação' => ['certifica', 'icagile', 'coach', 'pnl practitioner'],
-        ];
-
-        $areas = [];
-        foreach ($courses as $c) {
-            $titulo = mb_strtolower(html_entity_decode($c['titulo'], ENT_QUOTES, 'UTF-8'));
-            foreach ($area_keywords as $area => $kws) {
-                foreach ($kws as $kw) {
-                    if (mb_strpos($titulo, $kw) !== false) {
-                        if (!isset($areas[$area])) $areas[$area] = [];
-                        if (count($areas[$area]) < 5) {
-                            $areas[$area][] = $c;
-                        }
-                        break 2;
-                    }
-                }
-            }
-        }
-
-        $course_lines = [];
-        foreach ($areas as $area => $cs) {
-            $names = [];
-            foreach ($cs as $c) {
-                $title = mb_strlen($c['titulo']) > 45 ? mb_substr($c['titulo'], 0, 42) . '...' : $c['titulo'];
-                $names[] = $title . ' (' . $c['preco'] . ') - ' . $c['url'];
-            }
-            $course_lines[] = $area . ': ' . implode('; ', $names);
-        }
-
         $all_courses_lines = [];
         foreach ($courses as $c) {
             $title = mb_strlen($c['titulo']) > 50 ? mb_substr($c['titulo'], 0, 47) . '...' : $c['titulo'];
@@ -320,35 +279,23 @@ class ChatBot_ANJE_Formacao {
         $gratis = 0;
         foreach ($courses as $c) { if ($c['preco'] === 'Gratuito') $gratis++; }
 
-        return "És o assistente virtual da ANJE Formação (anjeformacao.pt).\n"
-            . "\nSOBRE: ANJE - Associação Nacional de Jovens Empresários, fundada 1986. ANJE Formação presente nas 5 regiões, certificada DGERT.\n"
-            . "\nEQUIPA:\n"
-            . "- Ana Jogo Mendes - Diretora\n"
-            . "- Coordenadores: Cláudia Almeida, Cristiana Moreira, Manuela Almeida, Vitória Pereira, Ana Rodrigues (Lisboa), Armanda Ângelo (Coimbra), Cátia Santos (Algarve), Patrícia Nobre (Alentejo)\n"
-            . "- Teresa Miranda - Comunicação e Marketing\n"
-            . "- Sara Almeida - Administrativa\n"
-            . "- Susana Pereira - Administrativa\n"
-            . "- Fátima Pinto - Administrativa Coimbra\n"
-            . "\nÓRGÃOS SOCIAIS:\n"
-            . "- Presidente: Carlos Carvalho\n"
-            . "- Vice-Presidentes: Nuno Malheiro, Filipa Pinto de Carvalho, Gonçalo Simões de Almeida\n"
-            . "- Presidente Assembleia Geral: Miguel Moreira da Silva\n"
-            . "- Presidente Conselho Fiscal: Catarina Azevedo\n"
-            . "\nCONTACTOS: infoformacao@anje.pt | (+351) 220 108 074\n"
-            . "MORADA: Rua Paulo da Gama - Casa do Farol, 4169-006 Porto\n"
-            . "\n=== LISTA COMPLETA DE CURSOS ({$total} cursos, {$gratis} gratuitos) - USA APENAS ESTES, NÃO INVENTES NENHUM ===\n"
+        return "Assistente ANJE Formacao (anjeformacao.pt). ANJE fundada 1986, formacao certificada DGERT, 5 regioes.\n"
+            . "\nEQUIPA: Ana Jogo Mendes (Diretora). Coordenadores: Claudia Almeida, Cristiana Moreira, Manuela Almeida, Vitoria Pereira, Ana Rodrigues (Lisboa), Armanda Angelo (Coimbra), Catia Santos (Algarve), Patricia Nobre (Alentejo). Teresa Miranda (Comunicacao). Sara Almeida, Susana Pereira, Fatima Pinto (Administrativas).\n"
+            . "\nORGAOS SOCIAIS: Carlos Carvalho (Presidente). VPs: Nuno Malheiro, Filipa Pinto de Carvalho, Goncalo Simoes de Almeida. Assembleia: Miguel Moreira da Silva. Conselho Fiscal: Catarina Azevedo (Presidente), Pedro Cardoso (VP), Sofia Xavier (Vogal).\n"
+            . "\nCONTACTOS: infoformacao@anje.pt | (+351) 220 108 074 | Rua Paulo da Gama - Casa do Farol, 4169-006 Porto\n"
+            . "\n=== CURSOS ({$total} total, {$gratis} gratuitos) - USA SO ESTES, NAO INVENTES ===\n"
             . implode("\n", $all_courses_lines) . "\n"
-            . "\nÁREAS DE FORMAÇÃO DISPONÍVEIS: Excel, PowerBI, Inteligência Artificial, Gestão, Marketing, Vendas, Finanças, Jurídico, Comunicação, Empreendedorismo, Hotelaria, Certificação\n"
-            . "\nFORMAÇÃO-AÇÃO: programa para micro/PME, 90% FSE, Norte/Centro/Alentejo, até 250 colaboradores, Inovação/Transição Digital/ESG. Vitoria Pereira e Cristiana Moreira. https://anjeformacao.pt/formacao-acao-pme/\n"
-            . "\nREGRAS OBRIGATÓRIAS:\n"
-            . "- Português de Portugal\n"
-            . "- Usa **negrita** para títulos\n"
-            . "- URLs completos: https://anjeformacao.pt/curso/...\n"
-            . "- NUNCA inventes cursos, nomes, preços ou URLs. Usa APENAS os cursos da lista acima.\n"
-            . "- Se a pergunta for sobre uma área que não existe na lista (ex: processamento de texto, fotografia, contabilidade), responde: 'Não temos cursos nessa área. As nossas áreas são: Excel, PowerBI, IA, Gestão, Marketing, Vendas, Finanças, Jurídico, Comunicação, Empreendedorismo, Hotelaria, Certificação'\n"
-            . "- Cursos com datas (agendados/marcados): mostra APENAS produtos variáveis (não simples). Usa get_attribute('data') nas variações. Se não houver produtos variáveis, diz 'não há cursos com datas agendadas'\n"
-            . "- Não listes cursos para perguntas sobre equipa/orgãos\n"
-            . "- Se não souberes: contacte infoformacao@anje.pt";
+            . "\nAREAS: Excel, PowerBI, IA/Inteligencia Artificial, Gestao/Lideranca, Marketing/Digital, Vendas/Comercial, Financas, Juridico/RGPD, Comunicacao, Empreendedorismo, Hotelaria, Certificacao\n"
+            . "\nFORMACAO-ACAO: programa PME, 90% FSE, Norte/Centro/Alentejo, ate 250 colaboradores, Inovacao/Transicao Digital/ESG. Vitoria Pereira e Cristiana Moreira. https://anjeformacao.pt/formacao-acao-pme/\n"
+            . "\nREGRAS:\n"
+            . "- Portugues de Portugal\n"
+            . "- **negrita** para titulos\n"
+            . "- URLs: https://anjeformacao.pt/curso/...\n"
+            . "- NAO INVENTAR cursos, nomes, precos ou URLs. Usar SO os cursos da lista.\n"
+            . "- Area inexistente (ex: processamento de texto, fotografia): responder 'Nao temos cursos nessa area. Areas: Excel, PowerBI, IA, Gestao, Marketing, Vendas, Financas, Juridico, Comunicacao, Empreendedorismo, Hotelaria, Certificacao'\n"
+            . "- Datas/agendados: so produtos variaveis (get_attribute('data') nas variacoes). Se nao houver: 'nao ha cursos com datas agendadas'\n"
+            . "- Equipa/orgaos: nao listar cursos\n"
+            . "- Duvida: infoformacao@anje.pt";
     }
 
     /* WOOCOMMERCE */
@@ -606,6 +553,9 @@ class ChatBot_ANJE_Formacao {
             'hotelaria' => ['hotelaria', 'turismo', 'higiene', 'alimentar'],
             'certificação' => ['certifica', 'icagile', 'coach', 'pnl practitioner'],
             'gratuito' => ['gratuito', 'gratis', 'desempregado'],
+            'assincrona' => ['assincrona', 'assíncrona', 'asincrona', 'assíncrono'],
+            'online' => ['online', 'e-learning', 'elearning', 'virtual', 'remoto', 'distancia'],
+            'presencial' => ['presencial', 'sala', 'aula', 'turma', 'lco'],
         ];
 
         $matched_area = null;
