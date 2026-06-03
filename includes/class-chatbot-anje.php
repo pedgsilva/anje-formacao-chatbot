@@ -563,6 +563,14 @@ class ChatBot_ANJE_Formacao {
             return $this->search_courses($msg);
         }
 
+        if ($this->match_kw($msg, ['processamento de texto', 'word', 'microsoft word', 'writer', 'openoffice', 'libreoffice'])) {
+            $result = $this->search_courses($msg);
+            if (strpos($result, 'Não encontrei') !== false) {
+                return "Não temos cursos de processamento de texto neste momento. As nossas áreas de formação incluem:\n\n• Excel / Folha de cálculo\n• PowerBI / Dashboards\n• Inteligência Artificial\n• Gestão e Liderança\n• Marketing Digital\n• Vendas\n• Finanças\n• Jurídico\n• Comunicação\n• Empreendedorismo\n\nPesquise por qualquer uma destas áreas!";
+            }
+            return $result;
+        }
+
         return "Não tenho essa informação específica. Posso ajudar com:\n\n• 📚 **Cursos e formações** - Pesquisa por área (IA, gestão, marketing, vendas, excel, powerbi...)\n• 💰 Preços e datas\n• 👥 **Equipa**\n• 📋 **Órgãos sociais**\n• 📞 **Contactos**\n\nOu contacte: infoformacao@anje.pt";
     }
 
