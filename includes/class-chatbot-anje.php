@@ -387,22 +387,24 @@ class ChatBot_ANJE_Formacao {
             $titulo = mb_strtolower(html_entity_decode($c['titulo'], ENT_QUOTES, 'UTF-8'));
             $preco = mb_strtolower($c['preco']);
             $terms = isset($c['terms']) ? $c['terms'] : [];
-            // First try taxonomy slug match
-            foreach ($terms as $tax => $slugs) {
-                foreach ($slugs as $slug) {
-                    if (mb_strpos($slug, $area) !== false) {
-                        $filtered[] = $c;
-                        break 2;
+            $matched = false;
+            // Match by keyword in title/price
+            foreach ($kws as $kw) {
+                if (mb_strpos($titulo, $kw) !== false || mb_strpos($preco, $kw) !== false) {
+                    $matched = true; break;
+                }
+            }
+            // Also match by taxonomy slug, but only for multi-char slugs to avoid false positives
+            if (!$matched) {
+                foreach ($terms as $tax => $slugs) {
+                    foreach ($slugs as $slug) {
+                        if (mb_strlen($area) >= 4 && mb_strpos($slug, $area) !== false) {
+                            $matched = true; break 2;
+                        }
                     }
                 }
             }
-            // Fallback: keyword in title/price
-            foreach ($kws as $kw) {
-                if (mb_strpos($titulo, $kw) !== false || mb_strpos($preco, $kw) !== false) {
-                    $filtered[] = $c;
-                    break;
-                }
-            }
+            if ($matched) $filtered[] = $c;
         }
         return $filtered;
     }
@@ -853,19 +855,21 @@ class ChatBot_ANJE_Formacao {
             $terms = isset($c['terms']) ? $c['terms'] : [];
             if ($matched_area) {
                 $matched = false;
-                // First try to match by WooCommerce taxonomy terms
-                foreach ($terms as $tax => $slugs) {
-                    foreach ($slugs as $slug) {
-                        if (mb_strpos($slug, $matched_area) !== false) {
-                            $matched = true; break 2;
-                        }
+                // Match by keyword in title/price using area keywords
+                foreach ($area_map[$matched_area] as $kw) {
+                    if (mb_strpos($titulo, $kw) !== false || mb_strpos($preco, $kw) !== false) {
+                        $matched = true; break;
                     }
                 }
-                // Fallback: match by keyword in title/price
+                // Also match by taxonomy slug, but only for multi-char slugs to avoid false positives
                 if (!$matched) {
-                    foreach ($area_map[$matched_area] as $kw) {
-                        if (mb_strpos($titulo, $kw) !== false || mb_strpos($preco, $kw) !== false) {
-                            $matched = true; break;
+                    foreach ($terms as $tax => $slugs) {
+                        foreach ($slugs as $slug) {
+                            // Only match slug if it contains the full area name or is a meaningful match
+                            // Avoid matching short area names like "ia" against any slug containing those letters
+                            if (mb_strlen($matched_area) >= 4 && mb_strpos($slug, $matched_area) !== false) {
+                                $matched = true; break 2;
+                            }
                         }
                     }
                 }
