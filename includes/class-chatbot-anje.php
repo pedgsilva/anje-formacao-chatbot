@@ -199,14 +199,25 @@ class ChatBot_ANJE_Formacao {
         }
 
         $provider = $settings['api_provider'] ?: 'openrouter';
+        error_log("ChatBot DEBUG: provider={$provider}, gemini_key=" . (empty($settings['gemini_key']) ? 'EMPTY' : 'SET') . ", openrouter_key=" . (empty($settings['openrouter_key']) ? 'EMPTY' : 'SET'));
 
         if ($provider === 'gemini' && !empty($settings['gemini_key'])) {
+            error_log("ChatBot DEBUG: calling Gemini");
             $response = $this->call_gemini($msg, $settings);
+            error_log("ChatBot DEBUG: Gemini response preview: " . substr($response, 0, 200));
             wp_send_json_success(['response' => $response]);
             return;
         }
 
-        $response = $this->call_openrouter($msg, $settings);
+        if (!empty($settings['openrouter_key'])) {
+            error_log("ChatBot DEBUG: calling OpenRouter");
+            $response = $this->call_openrouter($msg, $settings);
+            wp_send_json_success(['response' => $response]);
+            return;
+        }
+
+        error_log("ChatBot DEBUG: falling back to rule-based");
+        $response = $this->get_rule_based_response(strtolower(trim($msg)));
         wp_send_json_success(['response' => $response]);
     }
 
@@ -283,6 +294,11 @@ class ChatBot_ANJE_Formacao {
         $max_tokens = intval($settings['max_tokens']) ?: 800;
 
         $system_prompt = $this->build_gemini_prompt($settings, $msg);
+
+        // DEBUG: log how many courses are in the prompt
+        $course_count = preg_match_all('/^- /m', $system_prompt);
+        $area = $this->detect_area($msg);
+        error_log("ChatBot DEBUG call_gemini: area={$area}, courses_in_prompt={$course_count}, msg=" . substr($msg, 0, 80));
 
         $payload = [
             'contents' => [
