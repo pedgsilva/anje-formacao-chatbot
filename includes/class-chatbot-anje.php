@@ -228,7 +228,7 @@ class ChatBot_ANJE_Formacao {
         $model = $settings['model'] ?: 'openrouter/owl-alpha';
         $max_tokens = intval($settings['max_tokens']) ?: 800;
 
-        $system_prompt = $this->build_system_prompt($settings);
+        $system_prompt = $this->build_system_prompt($settings, $msg);
 
         $payload = [
             'model' => $model,
@@ -282,7 +282,7 @@ class ChatBot_ANJE_Formacao {
         }
         $max_tokens = intval($settings['max_tokens']) ?: 800;
 
-        $system_prompt = $this->build_gemini_prompt($settings);
+        $system_prompt = $this->build_gemini_prompt($settings, $msg);
 
         $payload = [
             'contents' => [
@@ -327,12 +327,81 @@ class ChatBot_ANJE_Formacao {
         return $data['candidates'][0]['content']['parts'][0]['text'];
     }
 
+    /* AREA DETECTION + COURSE FILTERING FOR LLM */
+
+    private function get_area_map() {
+        return [
+            'excel' => ['excel', 'folha de c', 'folha de cálculo', 'folha de calculo'],
+            'powerbi' => ['power bi', 'powerbi', 'dashboard'],
+            'ia' => ['inteligência artificial', ' claude', 'chatgpt', 'generativa', 'copilot'],
+            'gestão' => ['gestão', 'lideran', 'liderança', 'equipa', 'tempo', 'projeto', 'produtividade', 'burnout'],
+            'marketing' => ['marketing', 'digital', 'ecommerce', 'e-commerce', 'seo', 'influenc'],
+            'vendas' => ['venda', 'vendas', 'comercial', 'neuromarketing', 'crm', 'vendedor'],
+            'finanças' => ['financ', 'tesouraria', 'poupanca', 'sql', 'python'],
+            'jurídico' => ['juridic', 'direito', 'rgpd', 'laboral', 'sociedade', 'branqueamento'],
+            'comunicação' => ['comunicar', 'storytelling', 'apresentac', 'impacto', 'pnl'],
+            'empreendedorismo' => ['empreend', 'negocio', 'startup', 'plano de neg', 'inovar'],
+            'hotelaria' => ['hotelaria', 'turismo', 'higiene', 'alimentar'],
+            'certificação' => ['certifica', 'icagile', 'coach', 'pnl practitioner'],
+            'gratuito' => ['gratuito', 'gratis', 'desempregado'],
+            'assincrona' => ['assincrona', 'assíncrona', 'asincrona', 'assíncrono'],
+            'online' => ['online', 'e-learning', 'elearning', 'virtual', 'remoto', 'distancia'],
+            'presencial' => ['presencial', 'sala', 'aula', 'turma', 'lco'],
+        ];
+    }
+
+    private function detect_area($msg) {
+        $msg_lower = mb_strtolower(trim($msg));
+        $area_map = $this->get_area_map();
+        foreach ($area_map as $area => $kws) {
+            foreach ($kws as $kw) {
+                if (mb_strpos($msg_lower, $kw) !== false) {
+                    return $area;
+                }
+            }
+        }
+        return null;
+    }
+
+    private function filter_courses_by_area($courses, $area) {
+        $area_map = $this->get_area_map();
+        $kws = $area_map[$area] ?? [];
+        $filtered = [];
+        foreach ($courses as $c) {
+            $titulo = mb_strtolower(html_entity_decode($c['titulo'], ENT_QUOTES, 'UTF-8'));
+            $preco = mb_strtolower($c['preco']);
+            $terms = isset($c['terms']) ? $c['terms'] : [];
+            // First try taxonomy slug match
+            foreach ($terms as $tax => $slugs) {
+                foreach ($slugs as $slug) {
+                    if (mb_strpos($slug, $area) !== false) {
+                        $filtered[] = $c;
+                        break 2;
+                    }
+                }
+            }
+            // Fallback: keyword in title/price
+            foreach ($kws as $kw) {
+                if (mb_strpos($titulo, $kw) !== false || mb_strpos($preco, $kw) !== false) {
+                    $filtered[] = $c;
+                    break;
+                }
+            }
+        }
+        return $filtered;
+    }
+
     /* SYSTEM PROMPT for LLM */
 
-    private function build_system_prompt($settings) {
-        $courses = $this->fetch_courses_from_woocommerce();
+    private function build_system_prompt($settings, $msg = '') {
+        $all_courses = $this->fetch_courses_from_woocommerce();
 
-        $all_courses_lines = [];
+        // Pre-filter courses by detected area so LLM only sees relevant ones
+        $area = $msg ? $this->detect_area($msg) : null;
+        $courses = $area ? $this->filter_courses_by_area($all_courses, $area) : $all_courses;
+
+        // If area detected but no courses found, keep empty (LLM will say "não temos")
+        // If no area detected, show all courses (general query)
         $all_terms = [];
         foreach ($courses as $c) {
             $title = mb_strlen($c['titulo']) > 50 ? mb_substr($c['titulo'], 0, 47) . '...' : $c['titulo'];
@@ -383,8 +452,13 @@ class ChatBot_ANJE_Formacao {
 
     /* PROMPT ESPECIFICO PARA GEMINI - mais curto e direto */
 
-    private function get_gemini_all_courses_lines() {
-        $courses = $this->fetch_courses_from_woocommerce();
+    private function build_gemini_prompt($settings, $msg = '') {
+        $all_courses = $this->fetch_courses_from_woocommerce();
+
+        // Pre-filter courses by detected area so LLM only sees relevant ones
+        $area = $msg ? $this->detect_area($msg) : null;
+        $courses = $area ? $this->filter_courses_by_area($all_courses, $area) : $all_courses;
+
         $all_courses_lines = [];
         $all_terms = [];
         foreach ($courses as $c) {
@@ -408,30 +482,15 @@ class ChatBot_ANJE_Formacao {
 
         $terms_summary = [];
         foreach ($all_terms as $tax => $slugs) {
-            $terms_summary[] = $tax . ': ' . implode(',', array_keys($slugs));
+            $terms_summary[] = $tax . ':' . implode(',', array_keys($slugs));
         }
 
         $total = count($courses);
         $gratis = 0;
         foreach ($courses as $c) { if ($c['preco'] === 'Gratuito') $gratis++; }
 
-        return [
-            'lines' => $all_courses_lines,
-            'terms' => $terms_summary,
-            'total' => $total,
-            'gratis' => $gratis,
-        ];
-    }
-
-    private function build_gemini_prompt($settings) {
-        $data = $this->get_gemini_all_courses_lines();
-        $total = $data['total'];
-        $gratis = $data['gratis'];
-        $all_courses_lines = $data['lines'];
-        $terms_summary = $data['terms'];
-
         return "Tu es o assistente virtual da ANJE Formacao.\n"
-            . "Responde APENFTAMENTE em portugues de Portugal.\n"
+            . "Responde APENAS em portugues de Portugal.\n"
             . "Sobre cursos: usa APENAS a lista abaixo. Areas inexistentes: responde 'Nao temos cursos nessa area.' Sem inventar.\n"
             . "Sobre a equipa: usa os dados abaixo. Nao inventes nomes.\n"
             . "Formato de resposta: **Nome:** Cargo (uma pessoa por linha, separar seccoes com linha em branco)\n"
