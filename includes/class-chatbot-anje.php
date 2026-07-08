@@ -1036,8 +1036,18 @@ class ChatBot_ANJE_Formacao {
                         <td><input type="password" name="chatbot_anje_formacao_settings[gemini_key]" value="<?php echo esc_attr($s['gemini_key']); ?>" class="regular-text" placeholder="AIza...">
                         <p class="description">Usado quando o provider é Gemini. <a href="https://aistudio.google.com/app/apikey" target="_blank">Obter key</a></p></td></tr>
                     <tr><th><label>Modelo LLM</label></th>
-                        <td><input type="text" name="chatbot_anje_formacao_settings[model]" value="<?php echo esc_attr($s['model']); ?>" class="regular-text">
-                        <p class="description">OpenRouter: openrouter/owl-alpha, openrouter/anthropic/claude-3.5-sonnet... | Gemini: gemini-2.0-flash, gemini-2.0-flash-lite, gemini-1.5-pro</p></td></tr>
+                        <td>
+                            <input type="text" name="chatbot_anje_formacao_settings[model]" value="<?php echo esc_attr($s['model']); ?>" class="regular-text" list="chatbot-anje-formacao-models">
+                            <datalist id="chatbot-anje-formacao-models">
+                                <option value="openrouter/owl-alpha">
+                                <option value="nvidia/nemotron-3-ultra-550b-a55b:free">
+                                <option value="nvidia/nemotron-3-super-120b-a12b:free">
+                                <option value="anthropic/claude-3.5-sonnet">
+                                <option value="google/gemini-2.0-flash-001">
+                                <option value="openai/gpt-4o">
+                            </datalist>
+                            <p class="description">OpenRouter: <code>openrouter/owl-alpha</code> (default), <code>nvidia/nemotron-3-ultra-550b-a55b:free</code>, <code>nvidia/nemotron-3-super-120b-a12b:free</code>, <code>anthropic/claude-3.5-sonnet</code>, <code>google/gemini-2.0-flash-001</code>, <code>openai/gpt-4o</code> | Gemini: <code>gemini-2.0-flash</code>, <code>gemini-2.0-flash-lite</code>, <code>gemini-1.5-pro</code>. Qualquer ID válido do <a href="https://openrouter.ai/models" target="_blank">OpenRouter</a> ou <a href="https://aistudio.google.com/app/apikey" target="_blank">Gemini</a> funciona.</p>
+                        </td></tr>
                     <tr><th><label>Cor Principal</label></th>
                         <td><input type="color" name="chatbot_anje_formacao_settings[primary_color]" value="<?php echo esc_attr($s['primary_color']); ?>"></td></tr>
                     <tr><th><label>Posição</label></th>
