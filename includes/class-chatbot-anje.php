@@ -349,8 +349,8 @@ class ChatBot_ANJE_Formacao {
         return [
             'excel' => ['excel', 'folha de c', 'folha de cálculo', 'folha de calculo'],
             'powerbi' => ['power bi', 'powerbi', 'dashboard'],
-            'ia' => ['inteligência artificial', ' claude', 'chatgpt', 'generativa', 'copilot'],
-            'gestão' => ['gestão', 'lideran', 'liderança', 'equipa', 'tempo', 'projeto', 'produtividade', 'burnout'],
+            'ia' => ['inteligência artificial', 'inteligencia artificial', 'claude', 'chatgpt', 'generativa', 'copilot', 'microsoft copilot'],
+            'gestão' => ['gestão', 'gestao', 'lideran', 'liderança', 'equipa', 'tempo', 'projeto', 'produtividade', 'burnout'],
             'marketing' => ['marketing', 'digital', 'ecommerce', 'e-commerce', 'seo', 'influenc'],
             'vendas' => ['venda', 'vendas', 'comercial', 'neuromarketing', 'crm', 'vendedor'],
             'finanças' => ['financ', 'tesouraria', 'poupanca', 'sql', 'python'],
@@ -372,10 +372,12 @@ class ChatBot_ANJE_Formacao {
         foreach ($area_map as $area => $kws) {
             foreach ($kws as $kw) {
                 if (mb_strpos($msg_lower, $kw) !== false) {
+                    error_log("ChatBot DEBUG detect_area: matched area='$area' via keyword='$kw' in msg='$msg_lower'");
                     return $area;
                 }
             }
         }
+        error_log("ChatBot DEBUG detect_area: no area matched for msg='$msg_lower'");
         return null;
     }
 
@@ -394,11 +396,12 @@ class ChatBot_ANJE_Formacao {
                     $matched = true; break;
                 }
             }
-            // Also match by taxonomy slug, but only for multi-char slugs to avoid false positives
+            // Also match by taxonomy slug for relevant taxonomies
             if (!$matched) {
                 foreach ($terms as $tax => $slugs) {
                     foreach ($slugs as $slug) {
-                        if (mb_strlen($area) >= 4 && mb_strpos($slug, $area) !== false) {
+                        // Match area name in taxonomy slugs (pa_tipologia, product_cat, etc.)
+                        if (mb_strpos($slug, $area) !== false) {
                             $matched = true; break 2;
                         }
                     }
@@ -406,6 +409,7 @@ class ChatBot_ANJE_Formacao {
             }
             if ($matched) $filtered[] = $c;
         }
+        error_log("ChatBot DEBUG filter_courses_by_area: area='$area', input=" . count($courses) . ", output=" . count($filtered));
         return $filtered;
     }
 
@@ -420,6 +424,7 @@ class ChatBot_ANJE_Formacao {
 
         // If area detected but no courses found, keep empty (LLM will say "não temos")
         // If no area detected, show all courses (general query)
+        $all_courses_lines = [];
         $all_terms = [];
         foreach ($courses as $c) {
             $title = mb_strlen($c['titulo']) > 50 ? mb_substr($c['titulo'], 0, 47) . '...' : $c['titulo'];
@@ -778,10 +783,6 @@ class ChatBot_ANJE_Formacao {
             return $this->search_variable_courses($msg);
         }
 
-        if ($this->match_kw($msg, ['curso', 'cursos', 'formacao', 'formacoes', 'formação', 'formações', 'treinamento', 'workshop', 'excel', 'powerbi', 'power bi', 'gratuito', 'gratuitos', 'gratis', 'desempregado', 'desempregados'])) {
-            return $this->search_courses($msg);
-        }
-
         if ($this->match_kw($msg, ['coordenadora', 'coordenador', 'responsavel', 'responsável', 'quem é', 'quem e'])) {
             $coordenadores = [
                 'lisboa' => 'Ana Rodrigues',
@@ -822,24 +823,7 @@ class ChatBot_ANJE_Formacao {
     private function search_courses($query) {
         $courses = $this->fetch_courses_from_woocommerce();
 
-        $area_map = [
-            'excel' => ['excel', 'folha de c', 'folha de cálculo', 'folha de calculo'],
-            'powerbi' => ['power bi', 'powerbi', 'dashboard'],
-            'ia' => ['inteligência artificial', ' claude', 'chatgpt', 'generativa', 'copilot'],
-            'gestão' => ['gestão', 'lideran', 'liderança', 'equipa', 'tempo', 'projeto', 'produtividade', 'burnout'],
-            'marketing' => ['marketing', 'digital', 'ecommerce', 'e-commerce', 'seo', 'influenc'],
-            'vendas' => ['venda', 'vendas', 'comercial', 'neuromarketing', 'crm', 'vendedor'],
-            'finanças' => ['financ', 'tesouraria', 'poupanca', 'sql', 'python'],
-            'jurídico' => ['juridic', 'direito', 'rgpd', 'laboral', 'sociedade', 'branqueamento'],
-            'comunicação' => ['comunicar', 'storytelling', 'apresentac', 'impacto', 'pnl'],
-            'empreendedorismo' => ['empreend', 'negocio', 'startup', 'plano de neg', 'inovar'],
-            'hotelaria' => ['hotelaria', 'turismo', 'higiene', 'alimentar'],
-            'certificação' => ['certifica', 'icagile', 'coach', 'pnl practitioner'],
-            'gratuito' => ['gratuito', 'gratis', 'desempregado'],
-            'assincrona' => ['assincrona', 'assíncrona', 'asincrona', 'assíncrono'],
-            'online' => ['online', 'e-learning', 'elearning', 'virtual', 'remoto', 'distancia'],
-            'presencial' => ['presencial', 'sala', 'aula', 'turma', 'lco'],
-        ];
+        $area_map = $this->get_area_map();
 
         $matched_area = null;
         foreach ($area_map as $area => $kws) {
@@ -861,13 +845,11 @@ class ChatBot_ANJE_Formacao {
                         $matched = true; break;
                     }
                 }
-                // Also match by taxonomy slug, but only for multi-char slugs to avoid false positives
+                // Also match by taxonomy slug
                 if (!$matched) {
                     foreach ($terms as $tax => $slugs) {
                         foreach ($slugs as $slug) {
-                            // Only match slug if it contains the full area name or is a meaningful match
-                            // Avoid matching short area names like "ia" against any slug containing those letters
-                            if (mb_strlen($matched_area) >= 4 && mb_strpos($slug, $matched_area) !== false) {
+                            if (mb_strpos($slug, $matched_area) !== false) {
                                 $matched = true; break 2;
                             }
                         }
@@ -878,13 +860,10 @@ class ChatBot_ANJE_Formacao {
                 // No area matched — try to filter by keyword in title
                 $query_lower = mb_strtolower($query);
                 $query_words = preg_split('/\s+/', $query_lower);
-                foreach ($courses as $c) {
-                    $titulo_lower = mb_strtolower(html_entity_decode($c['titulo'], ENT_QUOTES, 'UTF-8'));
-                    foreach ($query_words as $word) {
-                        if (mb_strlen($word) > 2 && mb_strpos($titulo_lower, $word) !== false) {
-                            $filtered[] = $c;
-                            break;
-                        }
+                foreach ($query_words as $word) {
+                    if (mb_strlen($word) > 2 && mb_strpos($titulo, $word) !== false) {
+                        $filtered[] = $c;
+                        break;
                     }
                 }
             }
@@ -927,20 +906,7 @@ class ChatBot_ANJE_Formacao {
             return 'Neste momento não há cursos com datas agendadas. Consulte todos os cursos em https://anjeformacao.pt ou contacte infoformacao@anje.pt';
         }
 
-        $area_map = [
-            'excel' => ['excel', 'folha de c', 'folha de cálculo', 'folha de calculo'],
-            'powerbi' => ['power bi', 'powerbi', 'dashboard'],
-            'ia' => ['inteligência artificial', ' claude', 'chatgpt', 'generativa', 'copilot'],
-            'gestão' => ['gestão', 'lideran', 'liderança', 'equipa', 'tempo', 'projeto', 'produtividade', 'burnout'],
-            'marketing' => ['marketing', 'digital', 'ecommerce', 'e-commerce', 'seo', 'influenc'],
-            'vendas' => ['venda', 'vendas', 'comercial', 'neuromarketing', 'crm', 'vendedor'],
-            'finanças' => ['financ', 'tesouraria', 'poupanca', 'sql', 'python'],
-            'jurídico' => ['juridic', 'direito', 'rgpd', 'laboral', 'sociedade', 'branqueamento'],
-            'comunicação' => ['comunicar', 'storytelling', 'apresentac', 'impacto', 'pnl'],
-            'empreendedorismo' => ['empreend', 'negocio', 'startup', 'plano de neg', 'inovar'],
-            'hotelaria' => ['hotelaria', 'turismo', 'higiene', 'alimentar'],
-            'certificação' => ['certifica', 'icagile', 'coach', 'pnl practitioner'],
-        ];
+        $area_map = $this->get_area_map();
 
         $matched_area = null;
         foreach ($area_map as $area => $kws) {
@@ -971,7 +937,7 @@ class ChatBot_ANJE_Formacao {
         $count = 0;
         foreach ($filtered as $c) {
             if ($count >= 10) { $response .= "\n_E mais " . (count($filtered) - 10) . " cursos com datas!_"; break; }
-            $title = trim(preg_replace('/\\s+/', ' ', html_entity_decode($c['titulo'], ENT_QUOTES, 'UTF-8')));
+            $title = trim(preg_replace('/\s+/', ' ', html_entity_decode($c['titulo'], ENT_QUOTES, 'UTF-8')));
             $response .= "• **{$title}** - {$c['preco']}";
             if (!empty($c['dates'])) {
                 $response .= "\n  📌 Datas: {$c['dates']}";
