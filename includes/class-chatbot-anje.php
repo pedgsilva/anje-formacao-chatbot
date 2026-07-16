@@ -396,12 +396,14 @@ class ChatBot_ANJE_Formacao {
                     $matched = true; break;
                 }
             }
-            // Also match by taxonomy slug for relevant taxonomies
+            // Also match by taxonomy slug, but only for relevant taxonomies and exact-ish match
             if (!$matched) {
                 foreach ($terms as $tax => $slugs) {
+                    // Only match on pa_tipologia (course type) and product_cat (category)
+                    if (!in_array($tax, ['pa_tipologia', 'product_cat'], true)) continue;
                     foreach ($slugs as $slug) {
-                        // Match area name in taxonomy slugs (pa_tipologia, product_cat, etc.)
-                        if (mb_strpos($slug, $area) !== false) {
+                        // Match area as whole word or prefix in slug (e.g., "ia-" or "-ia" or "ia")
+                        if (preg_match('/(^|-)' . preg_quote($area, '/') . '(-|$)/', $slug)) {
                             $matched = true; break 2;
                         }
                     }
@@ -845,11 +847,12 @@ class ChatBot_ANJE_Formacao {
                         $matched = true; break;
                     }
                 }
-                // Also match by taxonomy slug
+                // Also match by taxonomy slug - only pa_tipologia and product_cat with exact-ish match
                 if (!$matched) {
                     foreach ($terms as $tax => $slugs) {
+                        if (!in_array($tax, ['pa_tipologia', 'product_cat'], true)) continue;
                         foreach ($slugs as $slug) {
-                            if (mb_strpos($slug, $matched_area) !== false) {
+                            if (preg_match('/(^|-)' . preg_quote($matched_area, '/') . '(-|$)/', $slug)) {
                                 $matched = true; break 2;
                             }
                         }
@@ -918,15 +921,30 @@ class ChatBot_ANJE_Formacao {
         $filtered = [];
         foreach ($courses as $c) {
             $titulo = mb_strtolower(html_entity_decode($c['titulo'], ENT_QUOTES, 'UTF-8'));
+            $terms = isset($c['terms']) ? $c['terms'] : [];
+            $matched = false;
             if ($matched_area) {
+                // Match by keyword in title
                 foreach ($area_map[$matched_area] as $kw) {
                     if (mb_strpos($titulo, $kw) !== false) {
-                        $filtered[] = $c; break;
+                        $matched = true; break;
+                    }
+                }
+                // Also match by taxonomy slug for relevant taxonomies
+                if (!$matched) {
+                    foreach ($terms as $tax => $slugs) {
+                        if (!in_array($tax, ['pa_tipologia', 'product_cat'], true)) continue;
+                        foreach ($slugs as $slug) {
+                            if (preg_match('/(^|-)' . preg_quote($matched_area, '/') . '(-|$)/', $slug)) {
+                                $matched = true; break 2;
+                            }
+                        }
                     }
                 }
             } else {
-                $filtered[] = $c;
+                $matched = true; // No area matched, show all
             }
+            if ($matched) $filtered[] = $c;
         }
 
         if (empty($filtered)) {
